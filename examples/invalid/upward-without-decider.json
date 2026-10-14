@@ -1,0 +1,36 @@
+{
+  "_invalid_because": "a move up the ladder must name a decider (checked by tools/check.py, not expressible in the schema)",
+  "ftef": "0.1",
+  "partner": {
+    "id": "https://federation.vdhpartnerlab.example"
+  },
+  "relyingParty": {
+    "id": "https://federation.vdhrelyingparty.example"
+  },
+  "state": "watch",
+  "stateHistory": [
+    {
+      "state": "joining",
+      "since": "2026-09-01T09:00:00Z",
+      "trigger": "trust mark status SUSPENDED"
+    },
+    {
+      "state": "member",
+      "since": "2026-09-20T09:00:00Z",
+      "trigger": "admitted",
+      "decidedBy": "security officer (fictional)"
+    },
+    {
+      "state": "suspended",
+      "since": "2026-10-01T09:00:00Z",
+      "trigger": "trust mark status SUSPENDED"
+    },
+    {
+      "state": "watch",
+      "since": "2026-10-10T09:00:00Z",
+      "trigger": "fresh evidence"
+    }
+  ],
+  "evidence": [],
+  "_expect": "move up from suspended to watch names no decider"
+}

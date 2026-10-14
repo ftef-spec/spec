@@ -1,0 +1,34 @@
+{
+  "_invalid_because": "an acceptance may never lift a partner to the highest band",
+  "ftef": "0.1",
+  "partner": {
+    "id": "https://federation.vdhsupplierx.example"
+  },
+  "relyingParty": {
+    "id": "https://federation.vdhrelyingparty.example"
+  },
+  "state": "member",
+  "stateHistory": [
+    {
+      "state": "member",
+      "since": "2026-10-14T09:00:00Z",
+      "trigger": "joined",
+      "decidedBy": "risk owner (fictional)"
+    }
+  ],
+  "evidence": [],
+  "acceptance": {
+    "decidedBy": "risk owner (fictional)",
+    "decidedAt": "2026-10-14T09:00:00Z",
+    "until": "2027-01-12T09:00:00Z",
+    "band": "high",
+    "reason": "x",
+    "situationLevel": "normal",
+    "limits": [
+      {
+        "type": "no-transit"
+      }
+    ]
+  },
+  "_expect": "'high' is not one of"
+}

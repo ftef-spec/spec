@@ -1,0 +1,49 @@
+{
+  "_note": "Decoded claims of an FTEF profile 8.1 trust mark (header: typ trust-mark+jwt). Fictional parties. Informative.",
+  "iss": "https://federation.vdhpartnerlab.example",
+  "sub": "https://federation.vdhpartnerlab.example",
+  "trust_mark_type": "https://ftef.vdhome.be/trust-mark/0.1/partner-evidence",
+  "iat": 1791954000,
+  "exp": 1792040400,
+  "status": {
+    "status_list": {
+      "idx": 412,
+      "uri": "https://registry.vdhrelyingparty.example/statuslists/1"
+    }
+  },
+  "ftef_evidence": [
+    {
+      "class": "attested",
+      "axes": {
+        "source": "verifier",
+        "timeBasis": "continuous",
+        "binding": "hardware-rooted"
+      },
+      "issuedAt": "2026-10-14T04:30:00Z",
+      "covers": "the partner service exposed at the federation seam (fictional)",
+      "id": "ev-1",
+      "issuer": "https://verifier.vdhverifier.example",
+      "reference": "https://registry.vdhrelyingparty.example/evidence/ev-1",
+      "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "class": "independently-assessed",
+      "axes": {
+        "source": "third-party",
+        "assessor": "accredited",
+        "timeBasis": "period",
+        "binding": "signed",
+        "liability": "contractual"
+      },
+      "issuedAt": "2026-03-01T00:00:00Z",
+      "coversUntil": "2026-02-28T23:59:59Z",
+      "digest": "sha256:9f2c6e1d4b7a8c3e5f6a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcd",
+      "covers": "the partner service exposed at the federation seam (fictional)",
+      "id": "ev-2",
+      "issuer": "https://assessor.vdhauditco.example",
+      "coversFrom": "2025-03-01T00:00:00Z",
+      "reference": "https://registry.vdhrelyingparty.example/evidence/ev-2"
+    }
+  ],
+  "_expect": "must not issue FTEF trust marks about itself"
+}

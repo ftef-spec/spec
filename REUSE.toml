@@ -1,0 +1,25 @@
+version = 1
+
+[[annotations]]
+path = ["spec/**", "decisions/**", "02-scope.md", "03-notices.md", "README.md", "LICENSE.md", "CONTRIBUTING.md", "SECURITY.md", "MAINTAINERS.md", "TRADEMARK.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 FTEF contributors"
+SPDX-License-Identifier = "LicenseRef-CSL-1.0"
+
+[[annotations]]
+path = ["00-contributor-license-agreement.md", "01-community-specification-license-v1.md", "05-governance.md", "06-contributing.md", "08-code-of-conduct.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "Community Specification contributors (https://github.com/CommunitySpecification/1.0)"
+SPDX-License-Identifier = "LicenseRef-CSL-1.0"
+
+[[annotations]]
+path = ["04-license.md"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = ["Community Specification contributors (https://github.com/CommunitySpecification/1.0)", "2026 FTEF contributors"]
+SPDX-License-Identifier = "LicenseRef-CSL-1.0"
+
+[[annotations]]
+path = ["schemas/**", "examples/**", "tools/**", "site/**", ".github/**", "REUSE.toml", "CITATION.cff", ".gitignore"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 FTEF contributors"
+SPDX-License-Identifier = "Apache-2.0"

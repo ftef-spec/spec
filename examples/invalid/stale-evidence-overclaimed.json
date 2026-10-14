@@ -1,0 +1,59 @@
+{
+  "ftef": "0.1",
+  "partner": {
+    "id": "https://federation.vdhpartnerlab.example",
+    "name": "vdhPartnerLab (fictional)"
+  },
+  "relyingParty": {
+    "id": "https://federation.vdhrelyingparty.example"
+  },
+  "state": "member",
+  "stateHistory": [
+    {
+      "state": "joining",
+      "since": "2026-09-01T09:00:00Z",
+      "trigger": "federation contract signed"
+    },
+    {
+      "state": "member",
+      "since": "2026-09-15T09:00:00Z",
+      "trigger": "evidence complete",
+      "decidedBy": "security officer (fictional)"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-1",
+      "class": "attested",
+      "axes": {
+        "source": "verifier",
+        "timeBasis": "continuous",
+        "binding": "hardware-rooted",
+        "scope": "full"
+      },
+      "issuer": {
+        "id": "https://verifier.vdhpartnerlab.example"
+      },
+      "issuedAt": "2025-10-01T00:00:00Z",
+      "covers": "the partner service exposed at the federation seam (fictional)"
+    }
+  ],
+  "shares": [
+    "policy-source"
+  ],
+  "recourse": {
+    "incidentContact": "security@vdhpartnerlab.example",
+    "responseTime": "PT4H",
+    "postureChangeNotice": "PT24H",
+    "exit": "90 days notice, data returned and erased"
+  },
+  "evaluation": {
+    "at": "2026-10-14T12:00:00Z",
+    "situationLevel": "normal",
+    "band": "high",
+    "evidencedBand": "high",
+    "accepted": false
+  },
+  "_invalid_because": "an attestation from 2025 is long stale and counts as none (6.1); the recorded evaluation overclaims",
+  "_expect": "evaluation does not follow from the rules"
+}

@@ -1,0 +1,63 @@
+{
+  "ftef": "0.1",
+  "partner": {
+    "id": "https://federation.vdhsupplierx.example",
+    "name": "vdhSupplierX (fictional)"
+  },
+  "relyingParty": {
+    "id": "https://federation.vdhrelyingparty.example"
+  },
+  "state": "member",
+  "stateHistory": [
+    {
+      "state": "member",
+      "since": "2026-10-14T09:00:00Z",
+      "trigger": "joined on self-declaration with a risk acceptance",
+      "decidedBy": "risk owner (fictional)"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-1",
+      "class": "self-declared",
+      "axes": {
+        "source": "first-party",
+        "timeBasis": "point-in-time",
+        "binding": "signed",
+        "scope": "full",
+        "liability": "legal"
+      },
+      "issuer": {
+        "id": "https://federation.vdhsupplierx.example"
+      },
+      "issuedAt": "2026-06-01T00:00:00Z",
+      "covers": "the partner service exposed at the federation seam (fictional)"
+    }
+  ],
+  "acceptance": {
+    "decidedBy": "risk owner (fictional)",
+    "decidedAt": "2026-10-14T09:00:00Z",
+    "until": "2027-01-12T09:00:00Z",
+    "band": "medium",
+    "reason": "a supplier portal needed for a named project; an independent assessment is promised by 2026-12-31",
+    "situationLevel": "normal",
+    "limits": [
+      {
+        "type": "data-ceiling",
+        "value": "internal"
+      },
+      {
+        "type": "no-transit"
+      },
+      {
+        "type": "no-automatic-actions"
+      },
+      {
+        "type": "reduced-lease",
+        "value": "half"
+      }
+    ]
+  },
+  "_invalid_because": "a reduced-lease factor is a number between 0 and 1 (6.5)",
+  "_expect": "is not of type 'number'"
+}

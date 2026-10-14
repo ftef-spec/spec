@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you refer to FTEF, please cite it as below."
+title: "FTEF: Federated Trust Evidence Framework"
+version: "0.1.0-pre"
+type: software
+authors:
+  - name: "FTEF contributors"
+repository-code: "https://github.com/ftef-spec/spec"
+url: "https://ftef.vdhome.be/"
+license: LicenseRef-CSL-1.0
+keywords:
+  - federation
+  - trust
+  - evidence
+  - risk
+  - specification
