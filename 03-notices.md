@@ -2,7 +2,9 @@
 
 ## Code of Conduct
 
-Contact for Code of Conduct issues or inquires:  _________________
+Contact for Code of Conduct issues or inquires: @Wombat164 (Maintainer), by email to dev@vdhome.be.
+
+A second contact will be added when a second maintainer joins (`MAINTAINERS.md`).
 
 [Ideally list two different individuals above (not a generic mailing list) as someone submitting a Code of Conduct complaint will want to know exactly who is receiving the complaint. We recommend two individuals in the case one of the individuals is the subject of or directly involved in the subject of a complaint.]
 
