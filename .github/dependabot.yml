@@ -6,3 +6,8 @@ updates:
   - package-ecosystem: pip
     directory: /tools
     schedule: {interval: weekly}
+    ignore:
+      # reuse 6.x publishes only a cp310 manylinux_2_41 wheel; on CI's Python 3.12 pip falls back to the sdist,
+      # whose build dependencies cannot be hash-pinned. Revisit when a py3 wheel is published.
+      - dependency-name: reuse
+        versions: [">=6"]
