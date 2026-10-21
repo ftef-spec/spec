@@ -266,6 +266,42 @@
       "maximum": 3600,
       "default": 0,
       "description": "The clock error the relying party allows for; it only ever narrows trust (6.2)."
+    },
+    "issuerCeilings": {
+      "type": "array",
+      "description": "Lowered ceilings for named issuers or schemes from a date (6.1). A ceiling here can only lower, never raise.",
+      "items": {
+        "type": "object",
+        "required": [
+          "issuer",
+          "ceiling",
+          "from",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "issuer": {
+            "type": "string",
+            "format": "uri",
+            "description": "An issuer identifier, or a scheme or method URI."
+          },
+          "ceiling": {
+            "enum": [
+              "none",
+              "low",
+              "medium"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
     }
   },
   "$defs": {
