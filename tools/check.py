@@ -95,7 +95,7 @@ def check_decision(holder: dict, roles: list[str], purpose: str, applied_at: str
         errs.append(f"{where}: {d['deciderRole']} is not a decider role the policy names for {purpose} (6.6)")
     if holder.get("requestedBy") and holder["requestedBy"] == d["deciderRef"]:
         errs.append(f"{where}: decided by the person who requested it (6.6)")
-    if _t(applied_at) > _t(d["notAfter"]):
+    if applied_at and _t(applied_at) > _t(d["notAfter"]):
         errs.append(f"{where}: decision applied after its notAfter (6.6)")
     return errs
 
@@ -126,8 +126,19 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
                 errs += check_decision(b, policy["states"].get(a["state"], {}).get("deciders", []), "move-up", b["since"],
                                        f"move up from {a['state']}")
     host = _host(r["partner"]["id"])
+    gone = set(r.get("withdrawnEvidence", []))
+    ids = [e["id"] for e in r["evidence"]]
     for e in r["evidence"]:
         errs += check_evidence_item(e, host, f"evidence {e['id']}")
+        if e["id"] in gone:
+            errs.append(f"evidence {e['id']}: reuses a withdrawn evidence id (5.2)")
+        if e.get("resolution") and e.get("result") != "adverse":
+            errs.append(f"evidence {e['id']}: only an adverse item has a resolution (6.1)")
+        if e.get("resolution"):
+            errs += check_decision({"decision": e["resolution"]}, policy["deciders"]["admission"], "resolution",
+                                   e["resolution"]["notAfter"], f"evidence {e['id']} resolution")
+    if len(ids) != len(set(ids)):
+        errs.append("an evidence id is used twice (5.2)")
     a = r.get("acceptance")
     if a:
         secs = (_t(a["until"]) - _t(a["decidedAt"])).total_seconds()
@@ -270,6 +281,18 @@ def evaluator_cases(policy: dict) -> int:
     att = json.loads((ROOT / "examples" / "valid" / "partner-attested.json").read_text(encoding="utf-8"))
     acc = json.loads((ROOT / "examples" / "valid" / "partner-accepted.json").read_text(encoding="utf-8"))
     at = "2026-10-14T12:00:00Z"
+    adv = json.loads(json.dumps(att))
+    adv["evidence"].append({"id": "ev-3", "class": "observed", "result": "adverse",
+                            "axes": {"source": "second-party", "timeBasis": "point-in-time", "binding": "signed", "scope": "full"},
+                            "issuer": {"id": "https://probe.vdhrelyingparty.example"}, "issuedAt": "2026-10-14T08:00:00Z",
+                            "covers": att["evidence"][0]["covers"]})
+    res = json.loads(json.dumps(adv))
+    res["evidence"][-1]["resolution"] = {"deciderRole": "security-officer", "deciderRef": "rp:person:0001", "purpose": "resolution",
+                                         "recordDigest": "sha256:" + "d" * 64, "nonce": "n-" + "d" * 20,
+                                         "notAfter": "2026-10-14T11:00:00Z", "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZQ"}
+    wd = json.loads(json.dumps(att))
+    wd["evidence"] = [e for e in wd["evidence"] if e["id"] != "ev-1"]
+    wd["withdrawnEvidence"] = ["ev-1"]
     cases = [
         ("status reachable: attested partner is high", evaluate(att, policy, at, "normal")["band"] == "high"),
         ("status unreachable: band capped at none, state unchanged",
@@ -281,6 +304,9 @@ def evaluator_cases(policy: dict) -> int:
         ("a higher situation level lapses the acceptance", evaluate(acc, policy, at, "elevated")["accepted"] is False),
         ("an acceptance never applies after its end", evaluate(acc, policy, "2027-01-13T00:00:00Z", "normal")["accepted"] is False),
         ("attested evidence two days old is long stale", evaluate(att, policy, "2026-10-16T12:00:00Z", "normal")["band"] == "medium"),
+        ("an adverse item cancels supporting evidence about the same coverage", evaluate(adv, policy, at, "normal")["band"] == "none"),
+        ("a resolved adverse item no longer cancels", evaluate(res, policy, at, "normal")["band"] == "high"),
+        ("a withdrawn evidence id never counts", evaluate(wd, policy, at, "normal")["band"] == "medium"),
     ]
     bad = 0
     for name, ok in cases:

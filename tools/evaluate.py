@@ -61,6 +61,26 @@ def item_band(item: dict, policy: dict, state: str, at: datetime, level: str) ->
     return band
 
 
+def alive(item: dict, policy: dict, state: str, at: datetime, level: str) -> bool:
+    """An item still in play: issued, not dated in the future, and not past twice its freshness (6.1, 6.2)."""
+    cls = policy["classes"].get(item["class"])
+    if cls is None:
+        return False
+    start = item["coversUntil"] if item["axes"]["timeBasis"] == "period" else item["issuedAt"]
+    age_days = (at - _t(start)).total_seconds() / 86400
+    return 0 <= age_days <= 2 * cls["freshnessDays"] * _scale(policy, state, level) and at >= _t(item["issuedAt"])
+
+
+def counted(record: dict, policy: dict, state: str, at: datetime, level: str) -> list[dict]:
+    """The items that may raise the band (6.1): never a withdrawn id, never an adverse item, and nothing about coverage
+    that an unresolved adverse item in play contradicts. Contradiction resolves towards less trust."""
+    gone = set(record.get("withdrawnEvidence", []))
+    items = [i for i in record["evidence"] if i["id"] not in gone]
+    blocked = {i["covers"] for i in items if i.get("result") == "adverse" and not i.get("resolution")
+               and alive(i, policy, state, at, level)}
+    return [i for i in items if i.get("result", "supports") == "supports" and i["covers"] not in blocked]
+
+
 def lapsed(record: dict, policy: dict, situation_level: str, at: datetime) -> bool:
     """6.3: an acceptance lapses at its end, on a higher situation level, or on any move down after its decision."""
     a = record["acceptance"]
@@ -81,7 +101,7 @@ def evaluate(record: dict, policy: dict, at: str, situation_level: str, status_r
     if not status_reachable:
         cap = "none"                                    # 8.1: evaluation capped, state unchanged
     best = "none"
-    for item in record["evidence"]:
+    for item in counted(record, policy, state, when, situation_level):
         best = max(best, item_band(item, policy, state, when, situation_level), key=BANDS.index)
     evidenced = _min(best, cap)
     limits = list(policy["states"].get(state, {}).get("limits", []))

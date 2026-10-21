@@ -70,6 +70,15 @@
     },
     "evaluation": {
       "$ref": "#/$defs/evaluation"
+    },
+    "withdrawnEvidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true,
+      "description": "Ids of withdrawn evidence. A withdrawn id never counts again and is never reused (5.2)."
     }
   },
   "$defs": {
@@ -281,6 +290,18 @@
           "type": "string",
           "minLength": 1,
           "description": "The systems, services or processes the evidence is about (5.2). The relying party derives scope from it."
+        },
+        "result": {
+          "enum": [
+            "supports",
+            "adverse"
+          ],
+          "default": "supports",
+          "description": "adverse: the item shows a required outcome failing for what it covers (6.1, contradiction rule)."
+        },
+        "resolution": {
+          "$ref": "#/$defs/decision",
+          "description": "For an adverse item: the decision that resolved the contradiction (6.1)."
         }
       },
       "allOf": [
@@ -556,7 +577,8 @@
           "enum": [
             "admission",
             "move-up",
-            "acceptance"
+            "acceptance",
+            "resolution"
           ],
           "description": "Domain separation: a decision signature is never valid for another purpose, nor as an authentication signature."
         },
