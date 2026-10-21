@@ -167,6 +167,8 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
 
 def invariants_policy(p: dict) -> list[str]:
     errs = []
+    if p.get("clockSkewSeconds", 0) > 300:
+        errs.append("a clock skew above 300 seconds hides a broken clock (6.2)")
     scales = [s["freshnessScale"] for s in p["situationLevels"]]
     if scales != sorted(scales, reverse=True):
         errs.append("a higher situation level lengthens freshness (6.2)")
@@ -307,6 +309,13 @@ def evaluator_cases(policy: dict) -> int:
         ("an adverse item cancels supporting evidence about the same coverage", evaluate(adv, policy, at, "normal")["band"] == "none"),
         ("a resolved adverse item no longer cancels", evaluate(res, policy, at, "normal")["band"] == "high"),
         ("a withdrawn evidence id never counts", evaluate(wd, policy, at, "normal")["band"] == "medium"),
+        ("clock skew narrows: attested evidence is stale one skew before its freshness ends",
+         evaluate(att, policy, "2026-10-15T05:59:00Z", "normal")["band"] == "high"
+         and evaluate(att, policy, "2026-10-15T05:59:45Z", "normal")["band"] == "medium"),
+        ("clock skew narrows: an acceptance does not apply until a skew after its decision",
+         evaluate(acc, policy, "2026-10-14T09:00:10Z", "normal")["accepted"] is False),
+        ("a record past its notAfter counts as unreachable status",
+         evaluate(att, policy, "2026-10-21T00:00:00Z", "normal")["band"] == "none"),
     ]
     bad = 0
     for name, ok in cases:
