@@ -174,6 +174,9 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
 
 def invariants_policy(p: dict) -> list[str]:
     errs = []
+    h = p.get("isolationHorizonDays")
+    if h is not None and h > 30:
+        errs.append("an isolation horizon above 30 days keeps cached trust too long (6.8)")
     bud = p["acceptance"].get("budget", {})
     if bud.get("maxDaysPerWindow") and bud.get("windowDays") and bud["maxDaysPerWindow"] > bud["windowDays"]:
         errs.append("acceptance budget: more days per window than the window has (6.3)")

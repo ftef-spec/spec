@@ -302,6 +302,11 @@
           }
         }
       }
+    },
+    "isolationHorizonDays": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The longest a disconnected evaluation point may decide from cached inputs; past it, nothing cached counts (6.8)."
     }
   },
   "$defs": {

@@ -300,6 +300,16 @@ State and band are a pure function of the signed records, the policy and the tim
 each evaluation the digests of the record and the policy it used (`inputs`), so that any party holding them can
 recompute the result.
 
+### 6.8 Disconnected relying parties
+A relying party, or one of its evaluation points, may lose contact with registries, issuers and its own home for a
+time.
+- While disconnected it applies moves down only. It MUST NOT move a partner up or grant a new acceptance.
+- Every cached input (status lists, trust marks, evidence, policy, issuer ceilings) is capped by the policy's
+  `isolationHorizonDays`. Past it, nothing cached counts, whatever its own freshness or `exp`.
+- On reconnection it applies, in this order: downgrades, withdrawals and issuer ceilings received; then lifts the
+  outage cap of 8.1; then re-derives every band. Nothing that was lowered while disconnected is raised before the
+  newest downgrades are applied.
+
 ## 7 Conformance
 An implementation claims one or more conformance classes. A claim names the FTEF version and the profiles implemented.
 
@@ -422,6 +432,7 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | Time, versions and rollback (6.2, 6.7, 7.4.1) | The Update Framework (rollback and freeze protection), RFC 9334 (freshness against an epoch) (decision 0005) |
 | Acceptance in aggregate (6.3) | NIST SP 800-37 (explicit acceptance), risk budgets in operational risk practice (decision 0006) |
 | Issuer and scheme distrust (6.1) | Mozilla Root Store Policy (distrust of a certificate authority from a date), retired methods in identity assurance (decision 0007) |
+| Disconnected relying parties (6.8) | denied, disrupted, intermittent and limited environments in operational practice; revocations first on reconnection (decision 0008) |
 | Decisions (6.6) | RFC 8785 (canonical form), W3C WebAuthn (purpose-bound assertions); prior art in access tools authenticates the approver's click but signs nothing (decision 0003) |
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
@@ -439,6 +450,7 @@ Fictional partners only: `examples/valid/` and `examples/invalid/`, checked by `
 - **Restricted limits:** no transit, no automatic actions, leases at half length.
 - **Down triggers and a standing decision:** listed in the example policy; the standing decision restores to `watch` only after a suspension caused by registry status.
 - **Situation levels:** normal 1.0, elevated 0.5, high 0.33, severe 0.2.
+- **Isolation horizon:** 7 days.
 
 - **External assurance levels:** where evidence carries a level from another scheme (eIDAS levels of assurance, the
   EU Cybersecurity Act Art. 52 levels, NIST SP 800-63 assurance levels as a mapping), map `high` to `high`,
