@@ -149,5 +149,6 @@
       "date": "2026-10-14",
       "scope": "restore to watch when the registry restores status after a suspension caused by registry status"
     }
-  ]
+  ],
+  "isolationHorizonDays": 7
 }
