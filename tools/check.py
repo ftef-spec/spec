@@ -302,6 +302,8 @@ def evaluator_cases(policy: dict) -> int:
     res["evidence"][-1]["resolution"] = {"deciderRole": "security-officer", "deciderRef": "rp:person:0001", "purpose": "resolution",
                                          "recordDigest": "sha256:" + "d" * 64, "nonce": "n-" + "d" * 20,
                                          "notAfter": "2026-10-14T11:00:00Z", "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZQ"}
+    distrust = {**policy, "issuerCeilings": [{"issuer": "https://verifier.vdhrelyingparty.example", "ceiling": "low",
+                                               "from": "2026-10-01T00:00:00Z", "reason": "verifier found weak (fictional)"}]}
     zero = json.loads(json.dumps(acc))
     zero["evidence"][0]["class"] = "not-listed-by-policy"   # counts as none: an acceptance may then reach low only
     gone = json.loads(json.dumps(acc))
@@ -331,6 +333,12 @@ def evaluator_cases(policy: dict) -> int:
         ("an acceptance lifts at most one band above the evidence", evaluate(zero, policy, at, "normal")["band"] == "low"),
         ("an acceptance lapses when its basis is withdrawn", evaluate(gone, policy, at, "normal")["accepted"] is False),
         ("accepted trust never propagates: no-transit applies", {"type": "no-transit"} in evaluate(acc, policy, at, "normal")["limits"]),
+        ("a distrusted issuer's items count no higher than its lowered ceiling",
+         evaluate(att, distrust, at, "normal")["band"] == "medium"
+         and evaluate(att, {**distrust, "issuerCeilings": distrust["issuerCeilings"] + [
+             {"issuer": "https://assessor.vdhauditco.example", "ceiling": "none", "from": "2026-10-01T00:00:00Z", "reason": "x"}]},
+             at, "normal")["band"] == "low"),
+        ("a distrust takes effect only from its date", evaluate(att, distrust, "2026-09-15T12:00:00Z", "normal")["band"] != "none"),
         ("a record past its notAfter counts as unreachable status",
          evaluate(att, policy, "2026-10-21T00:00:00Z", "normal")["band"] == "none"),
     ]

@@ -52,6 +52,10 @@ def item_band(item: dict, policy: dict, state: str, at: datetime, level: str) ->
     else:
         start = item["issuedAt"]
     band = cls["ceiling"]
+    issuer = item["issuer"]["id"] if isinstance(item.get("issuer"), dict) else item.get("issuer", "")
+    for d in policy.get("issuerCeilings", []):           # 6.1: distrust of an issuer or scheme lowers, never raises
+        if d["issuer"] == issuer and at >= _t(d["from"]):
+            band = _min(band, d["ceiling"])
     if axes["scope"] == "partial":
         band = _lower(band)
     if band == "high" and axes["binding"] != "hardware-rooted":

@@ -185,8 +185,17 @@ Before an item counts, the relying party MUST verify its binding:
 
 An item whose binding cannot be verified is treated as `unsigned`. An item whose class the relying party's policy does not list counts as `none`.
 
+An item's issuer is the identity that its verified binding establishes; for `unsigned` evidence, the party that
+presented it. A level or class that the producer reports about itself can only lower what the policy allows, never
+raise it.
+
+A relying party's policy MAY lower the ceiling of a named issuer, scheme or method from a date (`issuerCeilings`),
+when it is found weak or distrusted. From that date every item from it counts no higher than the lowered ceiling, and
+the relying party re-evaluates every partner that holds such items at once. A lowered ceiling reaches every point
+that evaluates partners, including points that are disconnected, with the same priority as status revocations.
+
 Then, for each item:
-1. Take the policy's ceiling for its class.
+1. Take the policy's ceiling for its class, lowered by any issuer ceiling that applies.
 2. If its scope is `partial`, lower it by one band. If its scope is `none`, the item counts as `none`.
 3. If the result is `high` and the verified binding is not `hardware-rooted`, lower it to `medium`.
 4. If the item is stale (6.2), lower it by one band. If its age exceeds twice its freshness, or it is dated in the future, the item counts as `none`.
@@ -412,6 +421,7 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | Conflicts towards less trust (5.2, 6.1, 6.4) | two-phase sets (a removed element never returns), Mozilla Root Store Policy (distrust acts at once, restoration is decided) (decision 0004) |
 | Time, versions and rollback (6.2, 6.7, 7.4.1) | The Update Framework (rollback and freeze protection), RFC 9334 (freshness against an epoch) (decision 0005) |
 | Acceptance in aggregate (6.3) | NIST SP 800-37 (explicit acceptance), risk budgets in operational risk practice (decision 0006) |
+| Issuer and scheme distrust (6.1) | Mozilla Root Store Policy (distrust of a certificate authority from a date), retired methods in identity assurance (decision 0007) |
 | Decisions (6.6) | RFC 8785 (canonical form), W3C WebAuthn (purpose-bound assertions); prior art in access tools authenticates the approver's click but signs nothing (decision 0003) |
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
@@ -429,6 +439,11 @@ Fictional partners only: `examples/valid/` and `examples/invalid/`, checked by `
 - **Restricted limits:** no transit, no automatic actions, leases at half length.
 - **Down triggers and a standing decision:** listed in the example policy; the standing decision restores to `watch` only after a suspension caused by registry status.
 - **Situation levels:** normal 1.0, elevated 0.5, high 0.33, severe 0.2.
+
+- **External assurance levels:** where evidence carries a level from another scheme (eIDAS levels of assurance, the
+  EU Cybersecurity Act Art. 52 levels, NIST SP 800-63 assurance levels as a mapping), map `high` to `high`,
+  `substantial` to `medium` and `low` to `low`, and only below the class ceiling and any issuer ceiling; 6.1 step 3
+  still applies.
 
 ## Annex D (informative) Posture exchange (planned normative in 0.2)
 A partner may publish a level per area or zone, carrying:
