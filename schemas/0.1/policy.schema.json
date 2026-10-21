@@ -61,6 +61,36 @@
             "low",
             "medium"
           ]
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Limits over all acceptances of the relying party, so one risk cannot be split into many (6.3).",
+          "properties": {
+            "maxActive": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Active acceptances over all partners."
+            },
+            "maxActivePerPartner": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "maxSummedResidual": {
+              "type": "number",
+              "minimum": 0,
+              "description": "On the relying party's own residual scale."
+            },
+            "maxDaysPerWindow": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Acceptance days per partner within windowDays."
+            },
+            "windowDays": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
         }
       }
     },

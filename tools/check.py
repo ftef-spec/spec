@@ -147,6 +147,13 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
         if not r["evidence"]:
             errs.append("an acceptance requires at least one evidence item (6.3)")
         errs += check_decision(a, policy["deciders"]["acceptance"], "acceptance", a["decidedAt"], "acceptance")
+        if not set(a["basis"]) <= {e["id"] for e in r["evidence"]} | set(r.get("withdrawnEvidence", [])):
+            errs.append("basis names evidence the record does not hold (6.3)")
+        req = a.get("requested", {})
+        if req.get("band") and BANDS.index(a["band"]) > BANDS.index(req["band"]):
+            errs.append("an acceptance grants more than was requested (6.3)")
+        if req.get("until") and _t(a["until"]) > _t(req["until"]):
+            errs.append("an acceptance runs longer than was requested (6.3)")
         if a["situationLevel"] not in [x["level"] for x in policy["situationLevels"]]:
             errs.append(f"acceptance situation level {a['situationLevel']} is not a level of the policy (6.3)")
         moved_down = any(LADDER.index(b["state"]) > LADDER.index(p["state"]) and _t(b["since"]) >= _t(a["decidedAt"])
@@ -167,6 +174,9 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
 
 def invariants_policy(p: dict) -> list[str]:
     errs = []
+    bud = p["acceptance"].get("budget", {})
+    if bud.get("maxDaysPerWindow") and bud.get("windowDays") and bud["maxDaysPerWindow"] > bud["windowDays"]:
+        errs.append("acceptance budget: more days per window than the window has (6.3)")
     if p.get("clockSkewSeconds", 0) > 300:
         errs.append("a clock skew above 300 seconds hides a broken clock (6.2)")
     scales = [s["freshnessScale"] for s in p["situationLevels"]]
@@ -292,6 +302,10 @@ def evaluator_cases(policy: dict) -> int:
     res["evidence"][-1]["resolution"] = {"deciderRole": "security-officer", "deciderRef": "rp:person:0001", "purpose": "resolution",
                                          "recordDigest": "sha256:" + "d" * 64, "nonce": "n-" + "d" * 20,
                                          "notAfter": "2026-10-14T11:00:00Z", "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZQ"}
+    zero = json.loads(json.dumps(acc))
+    zero["evidence"][0]["class"] = "not-listed-by-policy"   # counts as none: an acceptance may then reach low only
+    gone = json.loads(json.dumps(acc))
+    gone["withdrawnEvidence"] = ["ev-1"]
     wd = json.loads(json.dumps(att))
     wd["evidence"] = [e for e in wd["evidence"] if e["id"] != "ev-1"]
     wd["withdrawnEvidence"] = ["ev-1"]
@@ -314,6 +328,9 @@ def evaluator_cases(policy: dict) -> int:
          and evaluate(att, policy, "2026-10-15T05:59:45Z", "normal")["band"] == "medium"),
         ("clock skew narrows: an acceptance does not apply until a skew after its decision",
          evaluate(acc, policy, "2026-10-14T09:00:10Z", "normal")["accepted"] is False),
+        ("an acceptance lifts at most one band above the evidence", evaluate(zero, policy, at, "normal")["band"] == "low"),
+        ("an acceptance lapses when its basis is withdrawn", evaluate(gone, policy, at, "normal")["accepted"] is False),
+        ("accepted trust never propagates: no-transit applies", {"type": "no-transit"} in evaluate(acc, policy, at, "normal")["limits"]),
         ("a record past its notAfter counts as unreachable status",
          evaluate(att, policy, "2026-10-21T00:00:00Z", "normal")["band"] == "none"),
     ]

@@ -24,6 +24,13 @@
     "band": "high",
     "reason": "x",
     "situationLevel": "normal",
+    "basis": [
+      "ev-1"
+    ],
+    "residual": {
+      "value": 8,
+      "scale": "likelihood x impact, 1 to 25 (local)"
+    },
     "limits": [
       {
         "type": "no-transit"
