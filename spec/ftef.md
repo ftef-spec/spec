@@ -150,7 +150,8 @@ A risk acceptance MUST state:
 - its end date and the band it grants;
 - the reason;
 - the situation level at the time of the decision;
-- at least one limit (6.5).
+- at least one limit (6.5);
+- its decision (6.6), and, where someone asked for it, who asked (`requestedBy`).
 
 The band it grants MUST NOT be `high`.
 
@@ -164,7 +165,7 @@ The states, from most to least trusted, are `member`, `watch`, `restricted`, `su
 - The policy names, for each state except `member` and `exited`, the higher state it moves up to (`upTo`) and the condition for it. It also names the triggers that move a partner down (6.4).
 
 ### 5.7 Status and history
-Every state change is recorded with its time, its trigger and, for a move up, its decider. Status is published through a profile (8.1).
+Every state change is recorded with its time, its trigger and, for a move up, its decider and its decision (6.6). Status is published through a profile (8.1).
 
 ## 6 Evaluation
 The numeric values are the relying party's policy (`policy.schema.json`). Annex C gives RECOMMENDED defaults. The invariants in this section are normative whatever the values.
@@ -230,6 +231,25 @@ A limit restricts what a partner may do at the seam.
 
 The limits of an active acceptance apply while it lifts the band. The policy's `restricted` limits apply to a partner in `restricted`, whatever its band.
 
+### 6.6 Decisions
+A name proves nothing. Every move up, admission and risk acceptance carries a decision as a signed object, so that it
+can be verified, cannot be replayed and cannot be taken by the person who asked for it.
+- A decision MUST state the decider's role, an opaque reference to the decider, its purpose (`admission`, `move-up` or
+  `acceptance`), the digest of the canonical form (RFC 8785) of the record as decided, a nonce, `notAfter`, and the
+  decider's signature over the canonical decision.
+- A relying party MUST verify the signature before the decision takes effect. A decision whose signature does not
+  verify counts as absent.
+- A decision applies only while the record's digest equals `recordDigest` and the current time is before `notAfter`.
+  If the record changed after signing, the decision MUST be given again.
+- The policy MUST name the decider roles for admission, for risk acceptances and for each state's move up. If no
+  eligible decider exists, the move MUST NOT happen.
+- A decision by the person who requested the move or the acceptance is void. Rules that need two people compare
+  persons, not accounts.
+- Decision signatures MUST be separated by purpose from each other and from authentication signatures, so that a
+  sign-in can never pass as a decision.
+- A change to the relying party's policy that widens (a higher ceiling or cap, a longer freshness or `maxDays`, a
+  removed limit or trigger) is itself a decision, by a decider other than the change's author.
+
 ## 7 Conformance
 An implementation claims one or more conformance classes. A claim names the FTEF version and the profiles implemented.
 
@@ -244,7 +264,7 @@ Issues evidence items or partner records. A conformant producer:
 Evaluates partner records and enforces the outcome at its seam. A conformant relying party:
 1. MUST hold a policy that validates against `policy.schema.json`, with class ceilings no higher than 5.3 allows;
 2. MUST compute bands as in 6.1 to 6.3, and MUST re-evaluate when evidence, state, status or situation level changes;
-3. MUST apply downward transitions without human approval, and MUST record a named decider for every upward transition (6.4);
+3. MUST apply downward transitions without human approval, and MUST record a named decider and a verified decision for every upward transition and acceptance (6.4, 6.6);
 4. MUST apply the limits of an active acceptance and of `restricted` (6.5);
 5. SHOULD treat partners that share a dependency (`shares`) with each other or with the relying party as one wherever its own policy requires independent parties. FTEF 0.1 itself defines no such decision; corroboration in 0.2 will;
 6. MUST make every active risk acceptance visible to the people accountable for it for as long as it holds, and SHOULD alert on it.
@@ -320,6 +340,7 @@ A registry MAY answer TRQP recognition queries of the form "is partner X recogni
   - Triggers MUST be authenticated.
   - Event streams (for example SSF and CAEP) SHOULD be advisory input to the relying party's policy, with per-partner allow-lists and rate limits.
   - Upgrades remain decided.
+- **Decisions shown one way and signed another.** The screen that asks for a decision can lie about what is signed. Implementations SHOULD render a decision for signing from the canonical record, independently of the requesting application, and SHOULD separate decision signatures from authentication signatures by purpose (6.6).
 - **Acceptance abuse.** A risk acceptance can hide weak partners. The invariants bound it: an end date, never `high`, void on a downgrade or a higher situation level, at least one limit, and visibility under 7.2(6).
 - **Common mode.** Partners that share a policy source, release pipeline or operator with the relying party fail together with it. Treating them as one (7.2(5)) prevents false independence.
 - **Clock manipulation.** Freshness depends on time. Relying parties MUST use a trustworthy clock, and SHOULD reject evidence dated in the future.
@@ -341,6 +362,7 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | Bands (6.1): the best evidence, capped by the state | NIST 800-63-4 (assurance limited by its weakest component, applied here to the state cap) |
 | Trust as a lease (principle 4, 6.2) | RFC 9334 (epoch against expiry), OpenID CAEP (events that end trust early) |
 | Risk acceptance (6.3) | NIST SP 800-37 (risk accepted explicitly by an authorising official) |
+| Decisions (6.6) | RFC 8785 (canonical form), W3C WebAuthn (purpose-bound assertions); prior art in access tools authenticates the approver's click but signs nothing (decision 0003) |
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
 | Equivalence by named profile or owned mapping (0.2) | TISAX, IEC 62443, NIST SP 800-47, ADatP-4774 |

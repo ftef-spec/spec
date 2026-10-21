@@ -139,6 +139,14 @@
         "record": {
           "type": "string",
           "format": "uri"
+        },
+        "requestedBy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Opaque reference to who asked for the move up or the acceptance; never its decider (6.6)."
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
         }
       }
     },
@@ -445,6 +453,14 @@
             "situation-level",
             "downgrade"
           ]
+        },
+        "requestedBy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Opaque reference to who asked for the move up or the acceptance; never its decider (6.6)."
+        },
+        "decision": {
+          "$ref": "#/$defs/decision"
         }
       },
       "dependentRequired": {
@@ -509,6 +525,58 @@
           "items": {
             "$ref": "#/$defs/limit"
           }
+        }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "description": "A decision as a signed object (6.6). A decision whose signature does not verify counts as absent.",
+      "required": [
+        "deciderRole",
+        "deciderRef",
+        "purpose",
+        "recordDigest",
+        "nonce",
+        "notAfter",
+        "signature"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "deciderRole": {
+          "type": "string",
+          "minLength": 1,
+          "description": "A decider role the policy names for this decision (6.6)."
+        },
+        "deciderRef": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An opaque, stable reference to the deciding person, never a name or mail address."
+        },
+        "purpose": {
+          "enum": [
+            "admission",
+            "move-up",
+            "acceptance"
+          ],
+          "description": "Domain separation: a decision signature is never valid for another purpose, nor as an authentication signature."
+        },
+        "recordDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Digest of the canonical form (RFC 8785) of the record as decided."
+        },
+        "nonce": {
+          "type": "string",
+          "minLength": 16
+        },
+        "notAfter": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{16,}$",
+          "description": "The decider's signature, base64url, over the canonical decision without this field."
         }
       }
     }

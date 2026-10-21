@@ -82,6 +82,24 @@ def check_evidence_item(e: dict, partner_host: str, where: str) -> list[str]:
     return errs
 
 
+def check_decision(holder: dict, roles: list[str], purpose: str, applied_at: str, where: str) -> list[str]:
+    """6.6: a decision is a signed object by a role the policy names, never by its requester, applied before notAfter.
+    The checker cannot verify signatures of fictional examples; it checks their shape and the separation rules."""
+    d = holder.get("decision")
+    if not d:
+        return [f"{where} carries no signed decision (6.6)"]
+    errs = []
+    if d["purpose"] != purpose:
+        errs.append(f"{where}: decision purpose {d['purpose']} is not {purpose} (6.6)")
+    if d["deciderRole"] not in roles:
+        errs.append(f"{where}: {d['deciderRole']} is not a decider role the policy names for {purpose} (6.6)")
+    if holder.get("requestedBy") and holder["requestedBy"] == d["deciderRef"]:
+        errs.append(f"{where}: decided by the person who requested it (6.6)")
+    if _t(applied_at) > _t(d["notAfter"]):
+        errs.append(f"{where}: decision applied after its notAfter (6.6)")
+    return errs
+
+
 def invariants_record(r: dict, policy: dict) -> list[str]:
     errs = []
     hist = r["stateHistory"]
@@ -89,6 +107,8 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
         errs.append("state differs from the last entry of stateHistory")
     if hist[0]["state"] != "joining" and not hist[0].get("decidedBy"):
         errs.append("admission to a state above joining names no decider (6.4)")
+    if hist[0]["state"] != "joining":
+        errs += check_decision(hist[0], policy["deciders"]["admission"], "admission", hist[0]["since"], "admission")
     for a, b in zip(hist, hist[1:]):
         if _t(b["since"]) < _t(a["since"]):
             errs.append("stateHistory is not in time order")
@@ -100,6 +120,11 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
             up_to = "member" if a["state"] == "joining" else policy["states"].get(a["state"], {}).get("upTo")
             if up_to != b["state"]:
                 errs.append(f"{a['state']} moves up only to {up_to} (6.4)")
+            if a["state"] == "joining":
+                errs += check_decision(b, policy["deciders"]["admission"], "admission", b["since"], "admission")
+            else:
+                errs += check_decision(b, policy["states"].get(a["state"], {}).get("deciders", []), "move-up", b["since"],
+                                       f"move up from {a['state']}")
     host = _host(r["partner"]["id"])
     for e in r["evidence"]:
         errs += check_evidence_item(e, host, f"evidence {e['id']}")
@@ -110,6 +135,7 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
             errs.append(f"acceptance runs longer than {policy['acceptance']['maxDays']} days (6.3)")
         if not r["evidence"]:
             errs.append("an acceptance requires at least one evidence item (6.3)")
+        errs += check_decision(a, policy["deciders"]["acceptance"], "acceptance", a["decidedAt"], "acceptance")
         if a["situationLevel"] not in [x["level"] for x in policy["situationLevels"]]:
             errs.append(f"acceptance situation level {a['situationLevel']} is not a level of the policy (6.3)")
         moved_down = any(LADDER.index(b["state"]) > LADDER.index(p["state"]) and _t(b["since"]) >= _t(a["decidedAt"])
@@ -148,6 +174,12 @@ def invariants_policy(p: dict) -> list[str]:
                 errs.append(f"state {s}: upTo {v['upTo']} is not higher (5.6)")
     if not p["states"]["restricted"].get("limits"):
         errs.append("restricted needs its own limits (5.6, 6.5)")
+    for s, v in p["states"].items():
+        if s != "member" and not v.get("deciders"):
+            errs.append(f"state {s} names no decider role for its move up (6.6)")
+    for k in ("admission", "acceptance"):
+        if not p["deciders"].get(k):
+            errs.append(f"no decider role for {k}: the move could never happen (6.6)")
     return errs
 
 
