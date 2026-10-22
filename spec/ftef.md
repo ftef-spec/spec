@@ -103,6 +103,11 @@ An evidence item MUST state:
 - when it was issued;
 - what it covers (`covers`): the systems, services or processes the evidence is about.
 
+Evidence ids are unique within a partner record and MUST NOT be reused. A withdrawn item's id is recorded in
+`withdrawnEvidence` and never counts again; new evidence takes a new id. Withdrawals merge as a union.
+
+An item MAY state `result` `adverse`: it shows a required outcome failing for what it covers.
+
 Evidence whose time basis is `period` MUST state the period covered (`coversFrom`, `coversUntil`). Evidence bound as `signed-transparent` MUST carry its transparency receipt.
 
 The `scope` axis is the relying party's judgement of how far `covers` reaches across its own seam. A producer cannot know another party's seam, so the relying party MUST set `scope` itself and MUST NOT take it from the producer. Evidence shared by producers and registries carries `covers` and no `scope`.
@@ -184,6 +189,11 @@ Then, for each item:
 3. If the result is `high` and the verified binding is not `hardware-rooted`, lower it to `medium`.
 4. If the item is stale (6.2), lower it by one band. If its age exceeds twice its freshness, or it is dated in the future, the item counts as `none`.
 
+Contradiction resolves towards less trust. An adverse item that is still in play (not older than twice its
+freshness, not dated in the future) and has no `resolution` cancels every item that covers the same thing: those items
+count as `none` until a decider resolves the contradiction (6.6, purpose `resolution`). An adverse item never raises
+the band. Items about different coverage are not in contradiction.
+
 The evidenced band is the highest result over all items, capped by the cap of the partner's state. The partner's band
 is therefore never better than the weakest of its state and its best evidence. A partner in `joining` or `exited` has
 no band (`none`). In 0.1, independent items do not combine into a higher band.
@@ -217,7 +227,10 @@ When an acceptance lapses, the relying party MUST record `lapsedAt` and `lapseRe
 - A move up MUST name a decider, and MUST go only to the state the policy names as `upTo` for the current state.
 - Registry status (8.1) is input to the relying party's ladder, not a replacement for it:
   - a registry status lower than the local state moves the partner down at once;
-  - a registry status higher than the local state moves the partner up only through a named decider.
+  - a registry status higher than the local state moves the partner up only through a named decider;
+  - if two recognised registries publish different states for one partner, the lower applies;
+  - only the issuer of an evidence item, or the registry that issued a trust mark, withdraws it for every relying
+    party. Any other party acts locally, and its signal is advisory input elsewhere.
 - A standing decision MAY act as the decider for restorations that follow registry status, up to `watch`. A standing decision is recorded in the policy with its author, date and scope. Moves above `watch` always need an individual decision.
 - The relying party MUST re-evaluate the band whenever evidence, state, status or situation level changes. It MUST also re-evaluate no later than the earliest time at which an input expires: an item's freshness, an acceptance's `until`, a trust mark's `exp`, or a status list's `ttl`.
 
@@ -362,6 +375,7 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | Bands (6.1): the best evidence, capped by the state | NIST 800-63-4 (assurance limited by its weakest component, applied here to the state cap) |
 | Trust as a lease (principle 4, 6.2) | RFC 9334 (epoch against expiry), OpenID CAEP (events that end trust early) |
 | Risk acceptance (6.3) | NIST SP 800-37 (risk accepted explicitly by an authorising official) |
+| Conflicts towards less trust (5.2, 6.1, 6.4) | two-phase sets (a removed element never returns), Mozilla Root Store Policy (distrust acts at once, restoration is decided) (decision 0004) |
 | Decisions (6.6) | RFC 8785 (canonical form), W3C WebAuthn (purpose-bound assertions); prior art in access tools authenticates the approver's click but signs nothing (decision 0003) |
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
