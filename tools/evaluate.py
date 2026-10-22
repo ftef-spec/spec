@@ -42,10 +42,18 @@ def _skew(policy: dict) -> timedelta:
     return timedelta(seconds=policy.get("clockSkewSeconds", 0))
 
 
+def _shift(t: datetime, d: timedelta) -> datetime:
+    """t + d, saturating at the ends of the calendar: near year 1 or 9999 a skew must not crash the evaluation."""
+    try:
+        return t + d
+    except OverflowError:
+        return (datetime.max if d > timedelta(0) else datetime.min).replace(tzinfo=t.tzinfo)
+
+
 def item_band(item: dict, policy: dict, state: str, at: datetime, level: str) -> str:
     """6.1 and 6.2 for one evidence item. Clock skew only narrows: age is judged as if the clock were late, and an
     item counts only once it is issued even if the clock is early (6.2)."""
-    late, early = at + _skew(policy), at - _skew(policy)
+    late, early = _shift(at, _skew(policy)), _shift(at, -_skew(policy))
     cls = policy["classes"].get(item["class"])
     axes = item["axes"]
     if cls is None or axes.get("scope", "none") == "none":
@@ -80,7 +88,7 @@ def alive(item: dict, policy: dict, state: str, at: datetime, level: str) -> boo
     if cls is None:
         return False
     start = item["coversUntil"] if item["axes"]["timeBasis"] == "period" else item["issuedAt"]
-    early, late = at - _skew(policy), at + _skew(policy)        # an adverse item narrows, so skew keeps it in play
+    early, late = _shift(at, -_skew(policy)), _shift(at, _skew(policy))        # an adverse item narrows, so skew keeps it in play
     age_days = (early - _t(start)).total_seconds() / 86400
     return late >= _t(item["issuedAt"]) and age_days <= 2 * cls["freshnessDays"] * _scale(policy, state, level)
 
@@ -98,7 +106,7 @@ def counted(record: dict, policy: dict, state: str, at: datetime, level: str) ->
 def lapsed(record: dict, policy: dict, situation_level: str, at: datetime) -> bool:
     """6.3: an acceptance lapses at its end, on a higher situation level, or on any move down after its decision."""
     a = record["acceptance"]
-    if a.get("lapsedAt") or at + _skew(policy) > _t(a["until"]):
+    if a.get("lapsedAt") or _shift(at, _skew(policy)) > _t(a["until"]):
         return True
     order = [x["level"] for x in policy["situationLevels"]]
     if a["situationLevel"] not in order:
@@ -114,7 +122,7 @@ def evaluate(record: dict, policy: dict, at: str, situation_level: str, status_r
     when = _t(at)
     state = record["state"]
     cap = "none" if state in ("joining", "exited") else policy["states"].get(state, {}).get("cap", "none")
-    if record.get("notAfter") and when + _skew(policy) > _t(record["notAfter"]):
+    if record.get("notAfter") and _shift(when, _skew(policy)) > _t(record["notAfter"]):
         status_reachable = False                        # 7.4.1: an expired record counts as unreachable status
     if not status_reachable:
         cap = "none"                                    # 8.1: evaluation capped, state unchanged
@@ -125,7 +133,7 @@ def evaluate(record: dict, policy: dict, at: str, situation_level: str, status_r
     limits = list(policy["states"].get(state, {}).get("limits", []))
     out = {"band": evidenced, "evidencedBand": evidenced, "accepted": False, "limits": limits}
     a = record.get("acceptance")
-    if a and status_reachable and record["evidence"] and _t(a["decidedAt"]) <= when - _skew(policy) \
+    if a and status_reachable and record["evidence"] and _t(a["decidedAt"]) <= _shift(when, -_skew(policy)) \
             and not lapsed(record, policy, situation_level, when):
         lifted = _min(a["band"], policy["acceptance"]["maxBand"], cap)
         if BANDS.index(lifted) > BANDS.index(evidenced):

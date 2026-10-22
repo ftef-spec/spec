@@ -325,6 +325,8 @@ def evaluator_cases(policy: dict) -> int:
         ("period evidence without its period buys nothing", evaluate(no_period, policy, at, "normal")["band"] == "none"),
         ("a lowercase z is UTC", evaluate(lower_z, policy, at, "normal")["band"] == "high"),
         ("a leap second is a valid time", evaluate(leap, policy, at, "normal")["band"] == "high"),
+        ("clock skew at the end of the calendar does not crash: long stale",
+         evaluate(att, policy, "9999-12-31T23:59:59Z", "normal")["band"] == "none"),
         ("an acceptance for an unknown situation level does not apply",
          evaluate(unknown_level, policy, at, "normal")["accepted"] is False),
     ]
