@@ -17,7 +17,12 @@ LADDER = ["member", "watch", "restricted", "suspended", "joining", "withdrawn", 
 
 
 def _t(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    """RFC 3339 date-time as the schemas accept it: Z or z for UTC, and a leap second (:60) counted as :59."""
+    if s[-1:] in ("Z", "z"):
+        s = s[:-1] + "+00:00"
+    if s[17:19] == "60":
+        s = s[:17] + "59" + s[19:]
+    return datetime.fromisoformat(s)
 
 
 def _lower(b: str, n: int = 1) -> str:
@@ -46,6 +51,8 @@ def item_band(item: dict, policy: dict, state: str, at: datetime, level: str) ->
     if cls is None or axes.get("scope", "none") == "none":
         return "none"
     if axes["timeBasis"] == "period":
+        if "coversFrom" not in item or "coversUntil" not in item:
+            return "none"                               # 6.2 needs the period: without it the item buys nothing
         if not (_t(item["coversFrom"]) <= _t(item["coversUntil"]) <= _t(item["issuedAt"])):
             return "none"                               # 6.2: a period reaching into the future buys nothing
         start = item["coversUntil"]
@@ -94,6 +101,8 @@ def lapsed(record: dict, policy: dict, situation_level: str, at: datetime) -> bo
     if a.get("lapsedAt") or at + _skew(policy) > _t(a["until"]):
         return True
     order = [x["level"] for x in policy["situationLevels"]]
+    if a["situationLevel"] not in order:
+        return True                                     # decided for a level this policy does not know: fail closed
     if order.index(situation_level) > order.index(a["situationLevel"]):
         return True
     hist = record["stateHistory"]

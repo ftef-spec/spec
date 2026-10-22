@@ -11,6 +11,7 @@ Usage: python tools/check.py   (exit 1 on any failure)
 """
 from __future__ import annotations
 
+import copy
 import json
 import sys
 from datetime import datetime
@@ -20,7 +21,7 @@ from urllib.parse import urlparse
 from jsonschema import Draft202012Validator, FormatChecker
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from evaluate import LADDER, evaluate  # noqa: E402
+from evaluate import LADDER, _t, evaluate  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 BANDS = ["none", "low", "medium", "high"]
@@ -45,10 +46,6 @@ def _strip(o):
     if isinstance(o, list):
         return [_strip(v) for v in o]
     return o
-
-
-def _t(s: str) -> datetime:
-    return datetime.fromisoformat(s.replace("Z", "+00:00"))
 
 
 def _host(uri: str) -> str:
@@ -295,6 +292,15 @@ def evaluator_cases(policy: dict) -> int:
     wd = json.loads(json.dumps(att))
     wd["evidence"] = [e for e in wd["evidence"] if e["id"] != "ev-1"]
     wd["withdrawnEvidence"] = ["ev-1"]
+    no_period = copy.deepcopy(att)
+    no_period["evidence"] = [e for e in no_period["evidence"] if e["axes"]["timeBasis"] == "period"]
+    for e in no_period["evidence"]:
+        e.pop("coversUntil")                            # schema-valid in 0.1 (issue #15)
+    lower_z, leap = copy.deepcopy(att), copy.deepcopy(att)
+    lower_z["evidence"][0]["issuedAt"] = "2026-10-14T06:00:00z"
+    leap["evidence"][0]["issuedAt"] = "2026-10-14T05:59:60Z"
+    unknown_level = copy.deepcopy(acc)
+    unknown_level["acceptance"]["situationLevel"] = "a level the policy does not define"
     cases = [
         ("status reachable: attested partner is high", evaluate(att, policy, at, "normal")["band"] == "high"),
         ("status unreachable: band capped at none, state unchanged",
@@ -316,6 +322,11 @@ def evaluator_cases(policy: dict) -> int:
          evaluate(acc, policy, "2026-10-14T09:00:10Z", "normal")["accepted"] is False),
         ("a record past its notAfter counts as unreachable status",
          evaluate(att, policy, "2026-10-21T00:00:00Z", "normal")["band"] == "none"),
+        ("period evidence without its period buys nothing", evaluate(no_period, policy, at, "normal")["band"] == "none"),
+        ("a lowercase z is UTC", evaluate(lower_z, policy, at, "normal")["band"] == "high"),
+        ("a leap second is a valid time", evaluate(leap, policy, at, "normal")["band"] == "high"),
+        ("an acceptance for an unknown situation level does not apply",
+         evaluate(unknown_level, policy, at, "normal")["accepted"] is False),
     ]
     bad = 0
     for name, ok in cases:
