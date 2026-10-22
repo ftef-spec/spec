@@ -18,7 +18,16 @@
       "state": "member",
       "since": "2026-09-15T09:00:00Z",
       "trigger": "evidence complete",
-      "decidedBy": "security officer (fictional)"
+      "decidedBy": "security officer (fictional)",
+      "decision": {
+        "deciderRole": "security-officer",
+        "deciderRef": "rp:person:0001",
+        "purpose": "admission",
+        "recordDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "nonce": "n-cccccccccccccccccccc",
+        "notAfter": "2026-09-15T10:00:00Z",
+        "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZS1ub3QtdmVyaWZpYWJsZQ"
+      }
     }
   ],
   "evidence": [

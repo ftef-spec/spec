@@ -1,0 +1,71 @@
+{
+  "_invalid_because": "admission names a decider but carries no signed decision",
+  "ftef": "0.1",
+  "partner": {
+    "id": "https://federation.vdhpartnerlab.example",
+    "name": "vdhPartnerLab (fictional)"
+  },
+  "relyingParty": {
+    "id": "https://federation.vdhrelyingparty.example"
+  },
+  "state": "member",
+  "stateHistory": [
+    {
+      "state": "joining",
+      "since": "2026-09-01T09:00:00Z",
+      "trigger": "federation contract signed"
+    },
+    {
+      "state": "member",
+      "since": "2026-09-15T09:00:00Z",
+      "trigger": "evidence complete",
+      "decidedBy": "security officer (fictional)"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-1",
+      "class": "attested",
+      "axes": {
+        "source": "verifier",
+        "timeBasis": "continuous",
+        "binding": "hardware-rooted",
+        "scope": "full"
+      },
+      "issuer": {
+        "id": "https://verifier.vdhrelyingparty.example"
+      },
+      "issuedAt": "2026-10-14T06:00:00Z",
+      "covers": "the partner service exposed at the federation seam (fictional)"
+    },
+    {
+      "id": "ev-2",
+      "class": "independently-assessed",
+      "axes": {
+        "source": "third-party",
+        "assessor": "accredited",
+        "timeBasis": "period",
+        "binding": "signed",
+        "scope": "full",
+        "liability": "contractual"
+      },
+      "issuer": {
+        "id": "https://assessor.vdhauditco.example"
+      },
+      "issuedAt": "2026-03-01T00:00:00Z",
+      "coversFrom": "2025-03-01T00:00:00Z",
+      "coversUntil": "2026-02-28T23:59:59Z",
+      "covers": "the partner service exposed at the federation seam (fictional)"
+    }
+  ],
+  "shares": [
+    "policy-source"
+  ],
+  "recourse": {
+    "incidentContact": "security@vdhpartnerlab.example",
+    "responseTime": "PT4H",
+    "postureChangeNotice": "PT24H",
+    "exit": "90 days notice, data returned and erased"
+  },
+  "_expect": "carries no signed decision (6.6)"
+}

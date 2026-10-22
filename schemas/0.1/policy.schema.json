@@ -9,7 +9,8 @@
     "classes",
     "acceptance",
     "states",
-    "situationLevels"
+    "situationLevels",
+    "deciders"
   ],
   "additionalProperties": false,
   "properties": {
@@ -119,6 +120,14 @@
               "minLength": 1
             },
             "description": "Triggers that move a partner into this state (6.4)."
+          },
+          "deciders": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Decider roles for the move up to upTo (6.6)."
           }
         }
       },
@@ -180,6 +189,39 @@
             "type": "string",
             "minLength": 1
           }
+        }
+      }
+    },
+    "deciders": {
+      "type": "object",
+      "description": "Decider roles for admission and for risk acceptances (6.6). An empty list means the move cannot happen.",
+      "required": [
+        "admission",
+        "acceptance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "admission": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "acceptance": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "policyChange": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Who decides a policy change that widens (6.6)."
         }
       }
     }

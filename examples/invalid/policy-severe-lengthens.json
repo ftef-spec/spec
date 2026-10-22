@@ -30,6 +30,14 @@
     "maxDays": 90,
     "maxBand": "medium"
   },
+  "deciders": {
+    "admission": [
+      "security-officer"
+    ],
+    "acceptance": [
+      "risk-owner"
+    ]
+  },
   "states": {
     "member": {
       "cap": "high",
@@ -44,6 +52,9 @@
         "registry status watch",
         "negative outlook",
         "late report"
+      ],
+      "deciders": [
+        "security-officer"
       ]
     },
     "restricted": {
@@ -66,6 +77,9 @@
       "downTriggers": [
         "registry status restricted",
         "confirmed finding with a remediation plan"
+      ],
+      "deciders": [
+        "security-officer"
       ]
     },
     "suspended": {
@@ -78,6 +92,9 @@
         "confirmed security incident at the partner",
         "unreported incident",
         "missed milestone"
+      ],
+      "deciders": [
+        "security-officer"
       ]
     },
     "withdrawn": {
@@ -89,6 +106,9 @@
         "registry status invalid",
         "repeated failure",
         "oversight of the partner's domain failed"
+      ],
+      "deciders": [
+        "security-officer"
       ]
     }
   },
