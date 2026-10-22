@@ -19,7 +19,7 @@ SPDX-FileCopyrightText = ["Community Specification contributors (https://github.
 SPDX-License-Identifier = "LicenseRef-CSL-1.0"
 
 [[annotations]]
-path = ["schemas/**", "examples/**", "tools/**", "site/**", ".github/**", "REUSE.toml", "CITATION.cff", ".gitignore"]
+path = ["schemas/**", "examples/**", "tools/**", "site/**", "brand/**", ".github/**", "REUSE.toml", "CITATION.cff", ".gitignore"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 FTEF contributors"
 SPDX-License-Identifier = "Apache-2.0"

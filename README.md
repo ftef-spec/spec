@@ -1,8 +1,11 @@
 <div align="center">
 
-# FTEF
-
-**Federated Trust Evidence Framework**
+<h1>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="brand/ftef-lockup-dark.svg">
+    <img src="brand/ftef-lockup.svg" width="430" alt="FTEF: Federated Trust Evidence Framework">
+  </picture>
+</h1>
 
 *Trust between domains, earned by evidence, leased in time, cut by events.*
 
@@ -145,6 +148,7 @@ The reference evaluator is informative: where it and the specification disagree,
 | [`tools/check.py`](tools/check.py) | validates schemas, examples and invariants; runs the evaluator rules | no |
 | [`tools/evaluate.py`](tools/evaluate.py) | reference evaluation of a partner record (section 6) | no |
 | [`tools/fuzz_evaluate.py`](tools/fuzz_evaluate.py) | fuzzes the evaluator with valid records (Atheris) | no |
+| [`brand/`](brand/) | the mark, lockups and icons, generated from one master ([`BRAND.md`](brand/BRAND.md)) | no |
 
 ## Profiles
 
