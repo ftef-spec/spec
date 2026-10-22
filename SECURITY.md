@@ -6,7 +6,8 @@ the schemas or tooling.
 
 ## Reporting
 Please report privately through GitHub's private vulnerability reporting: the **Security** tab of this repository,
-then **Report a vulnerability**. Do not open a public issue.
+then **Report a vulnerability**
+(<https://github.com/ftef-spec/spec/security/advisories/new>). Do not open a public issue.
 
 We acknowledge reports within 7 days and agree on a disclosure date with the reporter. Fixes to normative text are
 published as an erratum or a new version, crediting the reporter unless they ask otherwise.
