@@ -94,6 +94,8 @@ def lapsed(record: dict, policy: dict, situation_level: str, at: datetime) -> bo
     if a.get("lapsedAt") or at > _t(a["until"]):
         return True
     order = [x["level"] for x in policy["situationLevels"]]
+    if a["situationLevel"] not in order:
+        return True                                     # decided for a level this policy does not know: fail closed
     if order.index(situation_level) > order.index(a["situationLevel"]):
         return True
     hist = record["stateHistory"]

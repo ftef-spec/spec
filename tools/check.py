@@ -297,6 +297,8 @@ def evaluator_cases(policy: dict) -> int:
     lower_z, leap = copy.deepcopy(att), copy.deepcopy(att)
     lower_z["evidence"][0]["issuedAt"] = "2026-10-14T06:00:00z"
     leap["evidence"][0]["issuedAt"] = "2026-10-14T05:59:60Z"
+    unknown_level = copy.deepcopy(acc)
+    unknown_level["acceptance"]["situationLevel"] = "a level the policy does not define"
     cases = [
         ("status reachable: attested partner is high", evaluate(att, policy, at, "normal")["band"] == "high"),
         ("status unreachable: band capped at none, state unchanged",
@@ -314,6 +316,8 @@ def evaluator_cases(policy: dict) -> int:
         ("period evidence without its period buys nothing", evaluate(no_period, policy, at, "normal")["band"] == "none"),
         ("a lowercase z is UTC", evaluate(lower_z, policy, at, "normal")["band"] == "high"),
         ("a leap second is a valid time", evaluate(leap, policy, at, "normal")["band"] == "high"),
+        ("an acceptance for an unknown situation level does not apply",
+         evaluate(unknown_level, policy, at, "normal")["accepted"] is False),
     ]
     bad = 0
     for name, ok in cases:
