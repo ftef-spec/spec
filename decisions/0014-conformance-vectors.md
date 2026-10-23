@@ -26,12 +26,12 @@
    the specification rejects.
 
 ## Consequences
-- `conformance/evaluation.json` (24 vectors: 6.1, 6.2, 6.3, 8.1), `conformance/validity.json` (28 vectors: every
+- `conformance/evaluation.json` (23 vectors: 6.1, 6.2, 6.3, 8.1), `conformance/validity.json` (28 vectors: every
   invalid example, the profile 8.1 invalid trust marks, and the valid examples), `conformance/vector.schema.json` and
   a README.
 - `tools/check.py` runs the vectors and prints how many each rule has. The former inline evaluator cases became
-  vectors; two cases on documents that fail their schema stay in `check.py` as robustness checks, since they are not
-  valid documents.
+  vectors; cases on documents that not every validator accepts stay in `check.py` as robustness checks (a period
+  without its dates, an unknown situation level, a leap second outside a leap second).
 - 7.5 in the specification; `CONTRIBUTING.md` lists the vectors among what a normative change updates.
 - Rules not yet shown by an evaluation vector (6.4 and 6.6 are about records, not outputs) are covered by validity
   vectors only.

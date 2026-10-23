@@ -286,8 +286,11 @@ def evaluator_cases(policy: dict) -> int:
         e.pop("coversUntil")                            # fails the schema (issue #15)
     unknown_level = copy.deepcopy(acc)
     unknown_level["acceptance"]["situationLevel"] = "a level the policy does not define"
+    leap = copy.deepcopy(att)
+    leap["evidence"][0]["issuedAt"] = "2026-10-14T05:59:60Z"   # :60 off a leap second: format checkers disagree
     cases = [
         ("period evidence without its period buys nothing", evaluate(no_period, policy, at, "normal")["band"] == "none"),
+        ("a leap second (:60) is read as :59", evaluate(leap, policy, at, "normal")["band"] == "high"),
         ("an acceptance for an unknown situation level does not apply",
          evaluate(unknown_level, policy, at, "normal")["accepted"] is False),
     ]

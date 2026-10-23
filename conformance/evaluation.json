@@ -291,33 +291,6 @@
       }
     },
     {
-      "id": "6.1-time-leap-second",
-      "rule": "6.1",
-      "description": "a leap second (:60) is a valid time",
-      "record": {
-        "base": "examples/valid/partner-attested.json",
-        "patch": [
-          {
-            "op": "replace",
-            "path": "/evidence/0/issuedAt",
-            "value": "2026-10-14T05:59:60Z"
-          },
-          {
-            "op": "remove",
-            "path": "/evaluation"
-          }
-        ]
-      },
-      "policy": {
-        "base": "examples/valid/policy-defaults.json"
-      },
-      "at": "2026-10-14T12:00:00Z",
-      "situationLevel": "normal",
-      "expect": {
-        "band": "high"
-      }
-    },
-    {
       "id": "6.2-fresh",
       "rule": "6.2",
       "description": "an attested item 6 hours old is fresh",
