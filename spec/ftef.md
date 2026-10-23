@@ -295,6 +295,15 @@ Publishes partner status for relying parties. A conformant registry:
 - Schemas are published at `https://ftef.vdhome.be/schema/MAJOR.MINOR/`.
 - While a version is a pre-draft, its schemas may change. From its first release, the files under its path never change, and a fix goes into a new version.
 
+### 7.5 Conformance vectors
+- Each release publishes conformance vectors under `conformance/`: evaluation vectors (a partner record, a policy, a
+  time, a situation level and status, with the expected band, evidenced band, acceptance and limits) and validity
+  vectors (a document with whether it is valid). Every vector names the rule it shows.
+- A relying party that claims conformance (7.2) MUST produce the expected outputs for every evaluation vector, and
+  MUST reject every document that a validity vector marks invalid for the kinds it reads.
+- A producer (7.1) and a registry (7.3) MUST NOT emit a document that a validity vector of its kind marks invalid.
+- Every normative change adds or changes vectors in the same change. The reference evaluator runs the same vectors.
+
 ## 8 Profiles
 
 ### 8.1 OpenID Federation trust marks with the IETF Token Status List (mandatory for registries)
