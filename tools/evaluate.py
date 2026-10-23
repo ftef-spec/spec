@@ -113,6 +113,9 @@ def lapsed(record: dict, policy: dict, situation_level: str, at: datetime) -> bo
         return True                                     # decided for a level this policy does not know: fail closed
     if order.index(situation_level) > order.index(a["situationLevel"]):
         return True
+    held = {i["id"] for i in record["evidence"]} - set(record.get("withdrawnEvidence", []))
+    if not set(a.get("basis", [])) <= held:
+        return True                                     # 6.3: an item of its basis was withdrawn or removed
     hist = record["stateHistory"]
     return any(LADDER.index(b["state"]) > LADDER.index(p["state"]) and _t(b["since"]) >= _t(a["decidedAt"])
                for p, b in zip(hist, hist[1:]))
@@ -135,8 +138,11 @@ def evaluate(record: dict, policy: dict, at: str, situation_level: str, status_r
     a = record.get("acceptance")
     if a and status_reachable and record["evidence"] and _t(a["decidedAt"]) <= _shift(when, -_skew(policy)) \
             and not lapsed(record, policy, situation_level, when):
-        lifted = _min(a["band"], policy["acceptance"]["maxBand"], cap)
+        one_up = BANDS[min(len(BANDS) - 1, BANDS.index(evidenced) + 1)]      # 6.3: at most one band above the evidence
+        lifted = _min(a["band"], policy["acceptance"]["maxBand"], cap, one_up)
         if BANDS.index(lifted) > BANDS.index(evidenced):
             merged = limits + [x for x in a["limits"] if x not in limits]
+            if {"type": "no-transit"} not in merged:
+                merged.append({"type": "no-transit"})   # 6.3: accepted trust never propagates
             out.update(band=lifted, accepted=True, limits=merged)
     return out

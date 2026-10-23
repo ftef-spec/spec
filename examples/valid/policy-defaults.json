@@ -30,7 +30,14 @@
   },
   "acceptance": {
     "maxDays": 90,
-    "maxBand": "medium"
+    "maxBand": "medium",
+    "budget": {
+      "maxActive": 5,
+      "maxActivePerPartner": 1,
+      "maxSummedResidual": 40,
+      "maxDaysPerWindow": 180,
+      "windowDays": 365
+    }
   },
   "deciders": {
     "admission": [

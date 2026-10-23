@@ -41,6 +41,13 @@
     "band": "medium",
     "reason": "a supplier portal needed for a named project; an independent assessment is promised by 2026-12-31",
     "situationLevel": "normal",
+    "basis": [
+      "ev-1"
+    ],
+    "residual": {
+      "value": 8,
+      "scale": "likelihood x impact, 1 to 25 (local)"
+    },
     "limits": [
       {
         "type": "data-ceiling",

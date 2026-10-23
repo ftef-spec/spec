@@ -436,7 +436,9 @@
         "band",
         "reason",
         "situationLevel",
-        "limits"
+        "limits",
+        "basis",
+        "residual"
       ],
       "additionalProperties": false,
       "properties": {
@@ -497,6 +499,51 @@
         },
         "decision": {
           "$ref": "#/$defs/decision"
+        },
+        "basis": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Ids of the evidence items the acceptance was decided on. It lapses when one of them is withdrawn or removed (6.3)."
+        },
+        "residual": {
+          "type": "object",
+          "required": [
+            "value",
+            "scale"
+          ],
+          "additionalProperties": false,
+          "description": "The residual risk on the relying party's own scale. The scale and method stay internal (principle 2).",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "scale": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "requested": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What was asked for, when the decider granted less (6.3).",
+          "properties": {
+            "band": {
+              "enum": [
+                "low",
+                "medium"
+              ]
+            },
+            "until": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
         }
       },
       "dependentRequired": {

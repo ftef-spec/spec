@@ -155,6 +155,8 @@ A risk acceptance MUST state:
 - its end date and the band it grants;
 - the reason;
 - the situation level at the time of the decision;
+- its basis: the evidence items it was decided on;
+- its residual risk on the relying party's own scale (the scale and method stay internal, principle 2);
 - at least one limit (6.5);
 - its decision (6.6), and, where someone asked for it, who asked (`requestedBy`).
 
@@ -217,7 +219,16 @@ An item is fresh while its age is at most the class freshness, multiplied by the
 - It requires at least one evidence item in the partner record.
 - A relying party MUST NOT grant a new acceptance for the same partner within `maxDays` after the previous one ended, unless the partner has presented an evidence item issued after the previous acceptance was decided. Without this, acceptances could be chained indefinitely.
 
-An acceptance lifts the band to the least of: its granted band, the policy's `acceptance.maxBand`, and the cap of the partner's state. It does so only while all of the following hold:
+- An acceptance MUST NOT lift the band more than one band above the evidenced band. A partner whose evidence counts as
+  `none` can be accepted to `low` at most.
+- Acceptances are bounded in aggregate, not only one by one. The policy's `acceptance.budget` limits the number of
+  active acceptances (in all and per partner), their summed residual, and the acceptance days per partner within a
+  window, so that one risk cannot be split into many small ones. The count survives withdrawal and re-admission: a
+  relying party keeps a tombstone of the partner identifier for the length of the window.
+- The decider MAY grant less than was requested (an earlier end, a lower band, more limits). The record keeps what was
+  requested (`requested`).
+
+An acceptance lifts the band to the least of: its granted band, one band above the evidenced band, the policy's `acceptance.maxBand`, and the cap of the partner's state. It does so only while all of the following hold:
 - the current time lies between `decidedAt` and `until`;
 - it has not lapsed;
 - the partner's status is reachable (8.1).
@@ -225,7 +236,12 @@ An acceptance lifts the band to the least of: its granted band, the policy's `ac
 An acceptance **lapses**:
 - when its end date passes;
 - when the situation level rises above the one recorded in it;
-- on any move down of the partner, including into `watch` or `restricted`.
+- on any move down of the partner, including into `watch` or `restricted`;
+- when an item of its basis is withdrawn or removed.
+
+Accepted trust does not propagate. A band lifted by an acceptance MUST NOT be used as input to any other trust
+computation: passing trust on to others, corroboration, or evidence about a third party. While an acceptance lifts the
+band, `no-transit` applies whether or not the acceptance lists it.
 
 When an acceptance lapses, the relying party MUST record `lapsedAt` and `lapseReason`. A lapsed acceptance MUST NOT apply again; a new decision is needed. An acceptance pauses without lapsing only while status is unreachable, and applies again when status returns. The situation level recorded in an acceptance MUST be one of the levels in the relying party's policy. While an acceptance lifts the band, its limits apply.
 
@@ -377,7 +393,7 @@ A registry MAY answer TRQP recognition queries of the form "is partner X recogni
   - Event streams (for example SSF and CAEP) SHOULD be advisory input to the relying party's policy, with per-partner allow-lists and rate limits.
   - Upgrades remain decided.
 - **Decisions shown one way and signed another.** The screen that asks for a decision can lie about what is signed. Implementations SHOULD render a decision for signing from the canonical record, independently of the requesting application, and SHOULD separate decision signatures from authentication signatures by purpose (6.6).
-- **Acceptance abuse.** A risk acceptance can hide weak partners. The invariants bound it: an end date, never `high`, void on a downgrade or a higher situation level, at least one limit, and visibility under 7.2(6).
+- **Acceptance abuse.** A risk acceptance can hide weak partners. The invariants bound it: an end date, never `high`, at most one band above the evidence, a budget over all acceptances, void on a downgrade, a higher situation level or a withdrawn basis, at least one limit, no propagation, and visibility under 7.2(6).
 - **Common mode.** Partners that share a policy source, release pipeline or operator with the relying party fail together with it. Treating them as one (7.2(5)) prevents false independence.
 - **Clock manipulation.** Freshness depends on time. Relying parties MUST use a trustworthy clock, SHOULD reject evidence dated in the future, and apply skew only towards less trust (6.2).
 - **Rollback.** Re-serving an older record, policy or trust mark could restore trust that was removed. Monotonic versions and `notAfter` (7.4.1) and a chained history (5.7) bound it.
@@ -401,6 +417,7 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | Risk acceptance (6.3) | NIST SP 800-37 (risk accepted explicitly by an authorising official) |
 | Conflicts towards less trust (5.2, 6.1, 6.4) | two-phase sets (a removed element never returns), Mozilla Root Store Policy (distrust acts at once, restoration is decided) (decision 0004) |
 | Time, versions and rollback (6.2, 6.7, 7.4.1) | The Update Framework (rollback and freeze protection), RFC 9334 (freshness against an epoch) (decision 0005) |
+| Acceptance in aggregate (6.3) | NIST SP 800-37 (explicit acceptance), risk budgets in operational risk practice (decision 0006) |
 | Decisions (6.6) | RFC 8785 (canonical form), W3C WebAuthn (purpose-bound assertions); prior art in access tools authenticates the approver's click but signs nothing (decision 0003) |
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
@@ -412,7 +429,7 @@ Fictional partners only: `examples/valid/` and `examples/invalid/`, checked by `
 
 ## Annex C (informative) RECOMMENDED defaults
 `examples/valid/policy-defaults.json`:
-- **Acceptance:** at most 90 days, at most `medium`.
+- **Acceptance:** at most 90 days, at most `medium`; a budget of 5 active acceptances, 1 per partner, a summed residual of 40 on the relying party's scale, and 180 acceptance days per partner in 365.
 - **Class freshness:** self-declared and both assessed classes 365 days; observed 7 days; self-measured and attested 1 day.
 - **State freshness scales:** watch, restricted and suspended 0.5; withdrawn 0.
 - **Restricted limits:** no transit, no automatic actions, leases at half length.

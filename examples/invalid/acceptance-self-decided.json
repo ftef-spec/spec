@@ -61,6 +61,13 @@
       "notAfter": "2026-10-14T10:00:00Z",
       "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZS1ub3QtdmVyaWZpYWJsZQ"
     },
+    "basis": [
+      "ev-1"
+    ],
+    "residual": {
+      "value": 8,
+      "scale": "likelihood x impact, 1 to 25 (local)"
+    },
     "limits": [
       {
         "type": "data-ceiling",
