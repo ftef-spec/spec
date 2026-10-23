@@ -15,13 +15,14 @@ import copy
 import json
 import sys
 from datetime import datetime
+from itertools import pairwise
 from pathlib import Path
 from urllib.parse import urlparse
 
 from jsonschema import Draft202012Validator, FormatChecker
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from evaluate import LADDER, _t, evaluate  # noqa: E402
+from evaluate import LADDER, _t, evaluate
 
 ROOT = Path(__file__).resolve().parent.parent
 BANDS = ["none", "low", "medium", "high"]
@@ -32,7 +33,8 @@ CLASS_MAX = {"self-declared": "low", "self-measured": "medium", "observed": "low
 # 5.3: the axes each named class requires
 CLASS_AXES = {
     "self-declared": {"source": {"first-party"}},
-    "self-measured": {"source": {"first-party"}, "timeBasis": {"continuous"}, "binding": {"signed", "signed-transparent", "hardware-rooted"}},
+    "self-measured": {"source": {"first-party"}, "timeBasis": {"continuous"},
+                      "binding": {"signed", "signed-transparent", "hardware-rooted"}},
     "observed": {"source": {"second-party"}},
     "assessed-by-relying-party": {"source": {"second-party"}},
     "independently-assessed": {"source": {"third-party"}, "assessor": {"accredited", "mutually-recognised"}},
@@ -73,9 +75,9 @@ def check_evidence_item(e: dict, partner_host: str, where: str) -> list[str]:
     issuer = e["issuer"]["id"] if isinstance(e.get("issuer"), dict) else e.get("issuer", "")
     if e["axes"].get("source") in ("verifier", "third-party") and _same_org(_host(issuer), partner_host):
         errs.append(f"{where}: a {e['axes']['source']} controlled by the partner is first-party (5.3)")
-    if e["axes"].get("timeBasis") == "period" and "coversFrom" in e and "coversUntil" in e:
-        if not (_t(e["coversFrom"]) <= _t(e["coversUntil"]) <= _t(e["issuedAt"])):
-            errs.append(f"{where}: a period must satisfy coversFrom <= coversUntil <= issuedAt (6.2)")
+    if e["axes"].get("timeBasis") == "period" and "coversFrom" in e and "coversUntil" in e \
+            and not (_t(e["coversFrom"]) <= _t(e["coversUntil"]) <= _t(e["issuedAt"])):
+        errs.append(f"{where}: a period must satisfy coversFrom <= coversUntil <= issuedAt (6.2)")
     return errs
 
 
@@ -106,7 +108,7 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
         errs.append("admission to a state above joining names no decider (6.4)")
     if hist[0]["state"] != "joining":
         errs += check_decision(hist[0], policy["deciders"]["admission"], "admission", hist[0]["since"], "admission")
-    for a, b in zip(hist, hist[1:]):
+    for a, b in pairwise(hist):
         if _t(b["since"]) < _t(a["since"]):
             errs.append("stateHistory is not in time order")
         if a["state"] == "exited":
@@ -147,7 +149,7 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
         if a["situationLevel"] not in [x["level"] for x in policy["situationLevels"]]:
             errs.append(f"acceptance situation level {a['situationLevel']} is not a level of the policy (6.3)")
         moved_down = any(LADDER.index(b["state"]) > LADDER.index(p["state"]) and _t(b["since"]) >= _t(a["decidedAt"])
-                         for p, b in zip(hist, hist[1:]))
+                         for p, b in pairwise(hist))
         if moved_down and not a.get("lapsedAt"):
             errs.append("the partner moved down after the acceptance was decided, so it lapsed and must record lapsedAt (6.3)")
     ev = r.get("evaluation")

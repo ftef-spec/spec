@@ -54,7 +54,7 @@ def _enums(o, out: set) -> set:
 
 
 # Values the schema accepts that a parser or a comparison may not expect.
-STRINGS = sorted(_enums(SCHEMA, set()) | _enums(POLICY_SCHEMA, set())) + [
+STRINGS = [*sorted(_enums(SCHEMA, set()) | _enums(POLICY_SCHEMA, set())),
     "2026-10-14T06:00:00Z", "2026-10-14T06:00:00z", "2026-10-14t06:00:00Z", "2026-10-14T05:59:60Z",
     "2026-10-14T06:00:00.123456789Z", "2026-10-14T06:00:00+14:00", "2026-10-14T06:00:00-12:00",
     "2025-03-01T00:00:00Z", "2027-01-13T00:00:00Z", "0001-01-01T00:00:00Z", "9999-12-31T23:59:59Z",
@@ -66,10 +66,10 @@ def _paths(o, here=()):
     yield here
     if isinstance(o, dict):
         for k, v in o.items():
-            yield from _paths(v, here + (k,))
+            yield from _paths(v, (*here, k))
     elif isinstance(o, list):
         for i, v in enumerate(o):
-            yield from _paths(v, here + (i,))
+            yield from _paths(v, (*here, i))
 
 
 def _get(o, path):

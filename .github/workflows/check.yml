@@ -19,6 +19,8 @@ jobs:
           python-version: "3.12"
       - name: Install pinned tools
         run: python -m pip install --require-hashes -r tools/requirements.txt
+      - name: Lint the reference tools
+        run: ruff check --output-format github .
       - name: Schemas, examples and invariants
         run: python tools/check.py
       - name: Brand files match their master

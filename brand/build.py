@@ -29,7 +29,7 @@ R, GAP, CY, HALO = 22, 4, 32, 1.5
 
 
 def f(v):
-    return ("%.2f" % v).rstrip("0").rstrip(".")
+    return f"{v:.2f}".rstrip("0").rstrip(".")
 
 
 def half(side, bars):
