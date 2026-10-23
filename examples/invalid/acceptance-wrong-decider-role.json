@@ -1,6 +1,6 @@
 {
   "_invalid_because": "the acceptance was decided by a role the policy does not name for acceptances",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhsupplierx.example",
     "name": "vdhSupplierX (fictional)"
