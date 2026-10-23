@@ -20,7 +20,7 @@
 [Schemas](schemas/0.1/) ·
 [Examples](examples/) ·
 [Decisions](decisions/) ·
-[Roadmap to 0.2](https://github.com/ftef-spec/spec/issues/19) ·
+[Roadmap](#status-and-roadmap) ·
 [Contributing](CONTRIBUTING.md)
 
 </div>
@@ -159,7 +159,8 @@ FTEF carries status through existing standards instead of inventing new ones:
 | Version | Scope | State |
 |---|---|---|
 | 0.1 | relying party: partner record, evaluation, risk acceptance, partner ladder, status via profile 8.1 | pre-draft |
-| 0.2 | signed decisions, conflicts towards less trust, time and rollback, acceptance in aggregate, issuer distrust, disconnected relying parties, events and audit, personal data | proposals 0003-0010 under review ([#19](https://github.com/ftef-spec/spec/issues/19)) |
+| 0.2 | signed decisions, conflicts towards less trust, time and rollback, acceptance in aggregate, issuer distrust, disconnected relying parties, decision records for events and audit and for personal data, conformance test vectors | 0003 and 0004 merged; 0005-0010 under review ([roadmap #19](https://github.com/ftef-spec/spec/issues/19), [milestone](https://github.com/ftef-spec/spec/milestone/1)) |
+| 0.3 | incidents and due process: trigger provenance, provisional moves and reversal, a watch that acts, containment below the partner, continuity of continuous evidence, issuer and anchor distrust, scoped situation level, notice duties and posture exchange | planned ([roadmap #45](https://github.com/ftef-spec/spec/issues/45), [milestone](https://github.com/ftef-spec/spec/milestone/2)) |
 
 Open proposals are [issues labelled `proposal`](https://github.com/ftef-spec/spec/issues?q=is%3Aissue+is%3Aopen+label%3Aproposal).
 
