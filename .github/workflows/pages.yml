@@ -30,9 +30,17 @@ jobs:
             echo "no release tag: refusing to publish without schemas"
             exit 1
           fi
-          for t in $tags; do  # later releases replace earlier files of the same version
+          for t in $tags; do  # a later release may add files, never change a published one (section 7.4)
             rm -rf "$RUNNER_TEMP/rel" && mkdir "$RUNNER_TEMP/rel"
             git archive "$t" schemas | tar -x -C "$RUNNER_TEMP/rel"
+            changed=0
+            for f in $(cd "$RUNNER_TEMP/rel/schemas" && find . -type f); do
+              if [ -e "_site/schema/$f" ] && ! cmp -s "$RUNNER_TEMP/rel/schemas/$f" "_site/schema/$f"; then
+                echo "::error::$t changes schema/${f#./}, which an earlier release published (section 7.4)"
+                changed=1
+              fi
+            done
+            [ "$changed" = 0 ] || exit 1
             cp -r "$RUNNER_TEMP/rel/schemas/." _site/schema/
             echo "schemas from $t:" $(ls "$RUNNER_TEMP/rel/schemas")
           done
