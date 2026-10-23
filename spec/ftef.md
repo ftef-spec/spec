@@ -380,7 +380,13 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
 | Equivalence by named profile or owned mapping (0.2) | TISAX, IEC 62443, NIST SP 800-47, ADatP-4774 |
-| Common mode (principle 7) | none: FTEF's own |
+| Common mode (principle 7) | Basel Committee large exposures standard (connected counterparties, economic interdependence), EU DORA Art. 29 (ICT concentration risk); FTEF applies them to providers that partners share |
+| Recourse and incident contacts (5.1) | REFEDS Sirtfi (security contacts, assistance with security incidents between federated entities) |
+| `watch` (5.6) | credit-rating watches and outlooks (a watch with a direction, resolved within a stated time) |
+
+Related work that FTEF does not yet reflect, and that later versions should reuse rather than redefine: OSCAL Assessment
+Results (the content of an assessment), ETSI TS 119 612 trusted lists (status and status history of trust services),
+and the principles for fair and accurate security ratings (disputed ratings are marked as such until resolved).
 
 ## Annex B (informative) Examples
 Fictional partners only: `examples/valid/` and `examples/invalid/`, checked by `tools/check.py`.
@@ -428,3 +434,10 @@ The evidence stays with the issuer.
 24. IEC 62443-3-2: https://webstore.iec.ch/en/publication/30727
 25. NATO ADatP-4774 Edition A Version 1 (public copy): https://www.jedi-sec.us/downloads/MISC_PDF/ADatP-4774%20EDA%20V1%20E.pdf
 26. Commission Implementing Regulation (EU) 2024/482 (EUCC): https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R0482
+27. Basel Committee on Banking Supervision, large exposures standard (LEX): https://www.bis.org/committees/bcbs/basel-framework/LEX/standard.pdf
+28. Regulation (EU) 2022/2554 (DORA): https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32022R2554
+29. REFEDS Security Incident Response Trust Framework for Federated Identity (Sirtfi) v2: https://refeds.org/wp-content/uploads/2022/08/Sirtfi-v2.pdf
+30. S&P Global Ratings, General Criteria: Use of CreditWatch and Outlooks (2015), mirror: https://www.maalot.co.il/publications/RS20151109160124.pdf
+31. NIST OSCAL Assessment Results model: https://pages.nist.gov/OSCAL/learn/concepts/layer/assessment/assessment-results/
+32. ETSI TS 119 612 (trusted lists) V2.4.1: https://www.etsi.org/deliver/etsi_ts/119600_119699/119612/02.04.01_60/ts_119612v020401p.pdf
+33. U.S. Chamber of Commerce, Principles for Fair and Accurate Security Ratings: https://www.uschamber.com/assets/documents/principles_for_fair_and_accurate_security_ratings.finallist_1.pdf
