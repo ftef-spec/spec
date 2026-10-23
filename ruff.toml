@@ -1,0 +1,9 @@
+# Lint for the reference tools (tools/, brand/build.py). Run: ruff check
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "BLE", "I", "UP", "SIM", "RUF"]
+
+[lint.pycodestyle]
+max-line-length = 140

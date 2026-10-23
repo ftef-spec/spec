@@ -11,6 +11,7 @@ a bug.
 from __future__ import annotations
 
 from datetime import datetime
+from itertools import pairwise
 
 BANDS = ["none", "low", "medium", "high"]
 LADDER = ["member", "watch", "restricted", "suspended", "joining", "withdrawn", "exited"]   # 5.6, most trusted first
@@ -100,7 +101,7 @@ def lapsed(record: dict, policy: dict, situation_level: str, at: datetime) -> bo
         return True
     hist = record["stateHistory"]
     return any(LADDER.index(b["state"]) > LADDER.index(p["state"]) and _t(b["since"]) >= _t(a["decidedAt"])
-               for p, b in zip(hist, hist[1:]))
+               for p, b in pairwise(hist))
 
 
 def evaluate(record: dict, policy: dict, at: str, situation_level: str, status_reachable: bool = True) -> dict:
