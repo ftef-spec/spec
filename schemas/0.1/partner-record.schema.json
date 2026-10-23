@@ -79,6 +79,16 @@
       },
       "uniqueItems": true,
       "description": "Ids of withdrawn evidence. A withdrawn id never counts again and is never reused (5.2)."
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic version of this record; a relying party refuses a version lower than the highest it has seen, and once it has seen a version, a record without one (7.4.1)."
+    },
+    "notAfter": {
+      "type": "string",
+      "format": "date-time",
+      "description": "After this time the record counts as unreachable status (8.1) until a newer version arrives (7.4.1)."
     }
   },
   "$defs": {
@@ -156,6 +166,11 @@
         },
         "decision": {
           "$ref": "#/$defs/decision"
+        },
+        "prev": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Digest of the previous history entry, so that history is append-only and hash-chained (5.7)."
         }
       }
     },
@@ -545,6 +560,32 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/limit"
+          }
+        },
+        "inputs": {
+          "type": "object",
+          "description": "Digests of what the evaluation was computed from, so that any party can recompute it (6.7).",
+          "required": [
+            "recordDigest",
+            "policyDigest"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "recordDigest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "policyDigest": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "statusRefs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
           }
         }
       }

@@ -224,6 +224,18 @@
           "description": "Who decides a policy change that widens (6.6)."
         }
       }
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic version of the policy (7.4.1)."
+    },
+    "clockSkewSeconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3600,
+      "default": 0,
+      "description": "The clock error the relying party allows for; it only ever narrows trust (6.2)."
     }
   },
   "$defs": {

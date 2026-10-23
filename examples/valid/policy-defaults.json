@@ -1,5 +1,7 @@
 {
   "ftef": "0.1",
+  "version": 1,
+  "clockSkewSeconds": 30,
   "classes": {
     "self-declared": {
       "ceiling": "low",

@@ -170,7 +170,7 @@ The states, from most to least trusted, are `member`, `watch`, `restricted`, `su
 - The policy names, for each state except `member` and `exited`, the higher state it moves up to (`upTo`) and the condition for it. It also names the triggers that move a partner down (6.4).
 
 ### 5.7 Status and history
-Every state change is recorded with its time, its trigger and, for a move up, its decider and its decision (6.6). Status is published through a profile (8.1).
+Every state change is recorded with its time, its trigger and, for a move up, its decider and its decision (6.6). History is append-only: each entry SHOULD carry the digest of the previous one (`prev`), and the head of the chain SHOULD be witnessed by a party other than the one that writes it. Status is published through a profile (8.1).
 
 ## 6 Evaluation
 The numeric values are the relying party's policy (`policy.schema.json`). Annex C gives RECOMMENDED defaults. The invariants in this section are normative whatever the values.
@@ -204,6 +204,13 @@ An item is fresh while its age is at most the class freshness, multiplied by the
 - For `period` evidence, `coversFrom` MUST NOT be after `coversUntil`, and `coversUntil` MUST NOT be after `issuedAt`. Otherwise the item counts as `none`, so that a period reaching into the future cannot buy freshness.
 - A freshness of 0 means the item counts only at the moment of access.
 - A higher situation level MUST NOT lengthen freshness. A lower one restores it at once.
+- Clock error only ever narrows trust. With the policy's `clockSkewSeconds`, anything that keeps or raises trust (an
+  item being fresh, an acceptance having started and not yet ended) is judged as if the clock were wrong in the unsafe
+  direction, and anything that lowers trust (an adverse item being in play, an expiry) as if it were wrong the other
+  way.
+- Ends are judged on the earlier of the wall clock and the time elapsed since the input was received, measured on a
+  monotonic clock. After a detected clock jump, a relying party applies moves down only, until its clock is trusted
+  again.
 
 ### 6.3 Risk acceptance
 - An acceptance MUST NOT run longer than the policy's `acceptance.maxDays`, measured from `decidedAt` to `until`.
@@ -263,6 +270,11 @@ can be verified, cannot be replayed and cannot be taken by the person who asked 
 - A change to the relying party's policy that widens (a higher ceiling or cap, a longer freshness or `maxDays`, a
   removed limit or trigger) is itself a decision, by a decider other than the change's author.
 
+### 6.7 Replayable evaluation
+State and band are a pure function of the signed records, the policy and the time. A relying party SHOULD record in
+each evaluation the digests of the record and the policy it used (`inputs`), so that any party holding them can
+recompute the result.
+
 ## 7 Conformance
 An implementation claims one or more conformance classes. A claim names the FTEF version and the profiles implemented.
 
@@ -294,6 +306,17 @@ Publishes partner status for relying parties. A conformant registry:
 - A MINOR release before 1.0 may change anything; from 1.0 on, a MINOR release only adds optional fields.
 - Schemas are published at `https://ftef.vdhome.be/schema/MAJOR.MINOR/`.
 - While a version is a pre-draft, its schemas may change. From its first release, the files under its path never change, and a fix goes into a new version.
+
+### 7.4.1 Record and policy versions
+Partner records, policies and the evidence sets of trust marks carry a monotonic `version`. A relying party MUST
+refuse a version lower than the highest it has seen for the same partner or policy.
+- The relying party SHOULD keep the highest version seen outside the evaluator's own state as well (for example in the
+  system that stores its decisions), and use the higher of the two. Losing or resetting the evaluator's state (a
+  rebuild, a restored backup, a wiped cache) then cannot let an older, validly signed document apply again.
+- Once a relying party has seen a versioned document for a partner or policy, a document for it without a `version`
+  counts as lower than any version, and is refused.
+
+A record MAY carry `notAfter`; after it, the record counts as unreachable status (8.1) until a newer version arrives.
 
 ## 8 Profiles
 
@@ -356,7 +379,8 @@ A registry MAY answer TRQP recognition queries of the form "is partner X recogni
 - **Decisions shown one way and signed another.** The screen that asks for a decision can lie about what is signed. Implementations SHOULD render a decision for signing from the canonical record, independently of the requesting application, and SHOULD separate decision signatures from authentication signatures by purpose (6.6).
 - **Acceptance abuse.** A risk acceptance can hide weak partners. The invariants bound it: an end date, never `high`, void on a downgrade or a higher situation level, at least one limit, and visibility under 7.2(6).
 - **Common mode.** Partners that share a policy source, release pipeline or operator with the relying party fail together with it. Treating them as one (7.2(5)) prevents false independence.
-- **Clock manipulation.** Freshness depends on time. Relying parties MUST use a trustworthy clock, and SHOULD reject evidence dated in the future.
+- **Clock manipulation.** Freshness depends on time. Relying parties MUST use a trustworthy clock, SHOULD reject evidence dated in the future, and apply skew only towards less trust (6.2).
+- **Rollback.** Re-serving an older record, policy or trust mark could restore trust that was removed. Monotonic versions and `notAfter` (7.4.1) and a chained history (5.7) bound it.
 
 ## 10 Privacy considerations
 - **Evidence is about systems, not people.** Producers MUST NOT include personal data in evidence summaries, beyond the contact points in `recourse`.
@@ -376,6 +400,7 @@ Each part of FTEF names the public sources it takes from. The reasoning is recor
 | Trust as a lease (principle 4, 6.2) | RFC 9334 (epoch against expiry), OpenID CAEP (events that end trust early) |
 | Risk acceptance (6.3) | NIST SP 800-37 (risk accepted explicitly by an authorising official) |
 | Conflicts towards less trust (5.2, 6.1, 6.4) | two-phase sets (a removed element never returns), Mozilla Root Store Policy (distrust acts at once, restoration is decided) (decision 0004) |
+| Time, versions and rollback (6.2, 6.7, 7.4.1) | The Update Framework (rollback and freeze protection), RFC 9334 (freshness against an epoch) (decision 0005) |
 | Decisions (6.6) | RFC 8785 (canonical form), W3C WebAuthn (purpose-bound assertions); prior art in access tools authenticates the approver's click but signs nothing (decision 0003) |
 | The ladder (5.6, 6.4) | Paris MoU (tighter re-check for higher risk), Mozilla Root Store Policy (incident, remediation, restriction, removal), IETF Token Status List (reversible suspension), EUCC (suspension distinct from withdrawal) |
 | Status (8.1) | OpenID Federation 1.0 (trust marks, trust mark status), IETF Token Status List |
