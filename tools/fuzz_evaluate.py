@@ -1,14 +1,16 @@
 # SPDX-FileCopyrightText: 2026 FTEF contributors
 # SPDX-License-Identifier: Apache-2.0
-"""Fuzz the reference evaluator with valid partner records (Atheris).
+"""Fuzz the reference evaluator with valid partner records and policies (Atheris).
 
-Each input mutates one of the valid example records. A mutant that fails the schema or the record invariants of
-check.py is skipped, so any exception, or a result outside the bands, is a bug in evaluate.py for a valid record.
+Each input takes one of the valid example records and one of the valid example policies, and mutates either of them a
+few times. A pair that fails its schema or the invariants of check.py is skipped, so any exception, or a result outside
+the bands, is a bug in evaluate.py for a valid record under a valid policy. An exception inside check.py is a bug in
+check.py: it must report on a schema-valid document, not crash on it.
 
     python tools/fuzz_evaluate.py -max_total_time=60      # needs tools/fuzz-requirements.txt
 
-With FUZZ_COLLECT=<file>, distinct failures (exception type and the evaluator line) are appended to the file and the
-run goes on, to list every finding in one run instead of stopping at the first.
+With FUZZ_COLLECT=<file>, distinct failures (exception type, file and line) are appended to the file and the run goes
+on, to list every finding in one run instead of stopping at the first.
 """
 from __future__ import annotations
 
@@ -26,15 +28,16 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 with atheris.instrument_imports():
     import evaluate as ev
-from check import invariants_record  # noqa: E402
+from check import invariants_policy, invariants_record  # noqa: E402
 from jsonschema import Draft202012Validator, FormatChecker  # noqa: E402
 
+VALID = ROOT / "examples" / "valid"
 SCHEMA = json.loads((ROOT / "schemas" / "0.1" / "partner-record.schema.json").read_text(encoding="utf-8"))
+POLICY_SCHEMA = json.loads((ROOT / "schemas" / "0.1" / "policy.schema.json").read_text(encoding="utf-8"))
 VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
-POLICY = json.loads((ROOT / "examples" / "valid" / "policy-defaults.json").read_text(encoding="utf-8"))
-LEVELS = [x["level"] for x in POLICY["situationLevels"]]
-SEEDS = [json.loads((ROOT / "examples" / "valid" / f).read_text(encoding="utf-8"))
-         for f in ("partner-attested.json", "partner-accepted.json")]
+POLICY_VALIDATOR = Draft202012Validator(POLICY_SCHEMA, format_checker=FormatChecker())
+SEEDS = [json.loads(f.read_text(encoding="utf-8")) for f in sorted(VALID.glob("partner-*.json"))]
+POLICIES = [json.loads(f.read_text(encoding="utf-8")) for f in sorted(VALID.glob("policy*.json"))]
 
 
 def _enums(o, out: set) -> set:
@@ -51,7 +54,7 @@ def _enums(o, out: set) -> set:
 
 
 # Values the schema accepts that a parser or a comparison may not expect.
-STRINGS = sorted(_enums(SCHEMA, set())) + [
+STRINGS = sorted(_enums(SCHEMA, set()) | _enums(POLICY_SCHEMA, set())) + [
     "2026-10-14T06:00:00Z", "2026-10-14T06:00:00z", "2026-10-14t06:00:00Z", "2026-10-14T05:59:60Z",
     "2026-10-14T06:00:00.123456789Z", "2026-10-14T06:00:00+14:00", "2026-10-14T06:00:00-12:00",
     "2025-03-01T00:00:00Z", "2027-01-13T00:00:00Z", "0001-01-01T00:00:00Z", "9999-12-31T23:59:59Z",
@@ -105,28 +108,32 @@ def test_one_input(data: bytes) -> None:
     try:
         _one(data)
     except Exception as e:                              # noqa: BLE001 - collect mode lists every failure
-        frame = [f for f in traceback.extract_tb(e.__traceback__) if f.filename.endswith("evaluate.py")][-1:]
-        key = (type(e).__name__, frame[0].lineno if frame else 0)
+        frame = [f for f in traceback.extract_tb(e.__traceback__) if Path(f.filename).name in ("evaluate.py", "check.py")]
+        key = (type(e).__name__, Path(frame[-1].filename).name if frame else "?", frame[-1].lineno if frame else 0)
         if key not in SEEN:
             SEEN.add(key)
             with open(COLLECT, "a", encoding="utf-8") as f:
-                f.write(f"{key[0]} at evaluate.py:{key[1]}: {str(e)[:160]}\n")
+                f.write(f"{key[0]} at {key[1]}:{key[2]}: {str(e)[:160]}\n")
 
 
 def _one(data: bytes) -> None:
     fdp = atheris.FuzzedDataProvider(data)
     rec = copy.deepcopy(SEEDS[fdp.ConsumeIntInRange(0, len(SEEDS) - 1)])
+    policy = copy.deepcopy(POLICIES[fdp.ConsumeIntInRange(0, len(POLICIES) - 1)])
     for _ in range(fdp.ConsumeIntInRange(1, 6)):
         try:
-            _mutate(rec, fdp)
+            _mutate(policy if fdp.ConsumeBool() else rec, fdp)
         except (KeyError, IndexError, TypeError):
             return
-    if any(True for _ in VALIDATOR.iter_errors(rec)) or invariants_record(rec, POLICY):
+    if any(True for _ in POLICY_VALIDATOR.iter_errors(policy)):
         return
+    if invariants_policy(policy) or any(True for _ in VALIDATOR.iter_errors(rec)) or invariants_record(rec, policy):
+        return
+    levels = [x["level"] for x in policy["situationLevels"]]
     at = STRINGS[fdp.ConsumeIntInRange(0, len(STRINGS) - 1)]
     if VALIDATOR.evolve(schema={"type": "string", "format": "date-time"}).is_valid(at) is False:
         at = "2026-10-14T12:00:00Z"
-    out = ev.evaluate(rec, POLICY, at, LEVELS[fdp.ConsumeIntInRange(0, len(LEVELS) - 1)], fdp.ConsumeBool())
+    out = ev.evaluate(rec, policy, at, levels[fdp.ConsumeIntInRange(0, len(levels) - 1)], fdp.ConsumeBool())
     if out["band"] not in ev.BANDS or out["evidencedBand"] not in ev.BANDS:
         raise AssertionError(f"band outside {ev.BANDS}: {out}")
     if ev.BANDS.index(out["band"]) < ev.BANDS.index(out["evidencedBand"]):
