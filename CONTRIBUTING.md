@@ -18,7 +18,7 @@ Thank you for helping. This repository is a Community Specification Working Grou
 | fix | corrects an error, no new requirement | at least 72 hours |
 | normative | adds, removes or changes a requirement, schema or invariant | at least 7 days, and a record in `decisions/` |
 
-While there is one maintainer, the review periods are observed by the maintainer and are not enforced by branch rules (`MAINTAINERS.md`).
+The required `review-period` check keeps a pull request from merging before its review period has passed. It reads the pull request's `kind:` label (`kind: normative`, `kind: fix`, `kind: tooling`, `kind: editorial`); a pull request without one does not merge.
 
 - A normative change updates the specification, the schema, the examples and `tools/check.py` in the same pull request, and keeps `python tools/check.py` and `reuse lint` green.
 - Examples use fictional parties only, on `.example` domains.
