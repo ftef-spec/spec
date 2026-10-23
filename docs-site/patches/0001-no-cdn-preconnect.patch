@@ -1,0 +1,12 @@
+diff --git a/quartz/components/Head.tsx b/quartz/components/Head.tsx
+index 23183ca..79f9a3f 100644
+--- a/quartz/components/Head.tsx
++++ b/quartz/components/Head.tsx
+@@ -50,7 +50,6 @@ export default (() => {
+             )}
+           </>
+         )}
+-        <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossOrigin="anonymous" />
+         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ 
+         <meta name="og:site_name" content={cfg.pageTitle}></meta>

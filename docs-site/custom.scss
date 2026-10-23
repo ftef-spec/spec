@@ -1,0 +1,23 @@
+// SPDX-FileCopyrightText: 2026 FTEF contributors
+// SPDX-License-Identifier: Apache-2.0
+//
+// Brand touches for the FTEF reading site (brand/BRAND.md). Replaces quartz/styles/custom.scss in the build.
+@use "./base.scss";
+
+// The amber of risk acceptance marks warnings, never carries text.
+.callout[data-callout="warning"] {
+  --color: var(--dark);
+  --border: #f2a541;
+  --bg: rgba(242, 165, 65, 0.12);
+}
+
+// Wide tables in the specification scroll instead of breaking the page at phone width.
+article .table-container {
+  overflow-x: auto;
+}
+
+// Long identifiers (schema paths, trust-mark types) wrap instead of widening the page on a phone.
+article code,
+article a {
+  overflow-wrap: anywhere;
+}
