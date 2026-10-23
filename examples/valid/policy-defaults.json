@@ -39,7 +39,8 @@
     ],
     "policyChange": [
       "security-officer"
-    ]
+    ],
+    "reciprocityDays": 30
   },
   "states": {
     "member": {

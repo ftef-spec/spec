@@ -92,6 +92,8 @@ def check_decision(holder: dict, roles: list[str], purpose: str, applied_at: str
         errs.append(f"{where}: {d['deciderRole']} is not a decider role the policy names for {purpose} (6.6)")
     if holder.get("requestedBy") and holder["requestedBy"] == d["deciderRef"]:
         errs.append(f"{where}: decided by the person who requested it (6.6)")
+    if holder.get("requestedByUnit") and holder["requestedByUnit"] == d.get("deciderUnit"):
+        errs.append(f"{where}: decided within the requester's own unit (6.6)")
     if applied_at and _t(applied_at) > _t(d["notAfter"]):
         errs.append(f"{where}: decision applied after its notAfter (6.6)")
     return errs
@@ -150,6 +152,7 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
                          for p, b in zip(hist, hist[1:]))
         if moved_down and not a.get("lapsedAt"):
             errs.append("the partner moved down after the acceptance was decided, so it lapsed and must record lapsedAt (6.3)")
+    errs += reciprocity(r, policy)
     ev = r.get("evaluation")
     if ev:
         if ev["situationLevel"] not in [x["level"] for x in policy["situationLevels"]]:
@@ -159,6 +162,28 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
             got = {k: ev.get(k, [] if k == "limits" else None) for k in ("band", "evidencedBand", "accepted", "limits")}
             if got != want:
                 errs.append(f"evaluation does not follow from the rules (section 6): recorded {got}, computed {want}")
+    return errs
+
+
+def reciprocity(r: dict, policy: dict) -> list[str]:
+    """6.6: two people who decided each other's requests within the policy's window do not count as each other's
+    decider; the later decision is void. Checked within one record; a relying party checks across its records."""
+    days = policy["deciders"].get("reciprocityDays", 30)
+    if days == 0:
+        return []
+    made = []                                           # (time, requester, decider, where)
+    for h in r["stateHistory"]:
+        if h.get("requestedBy") and h.get("decision"):
+            made.append((_t(h["since"]), h["requestedBy"], h["decision"]["deciderRef"], f"move to {h['state']}"))
+    a = r.get("acceptance")
+    if a and a.get("requestedBy") and a.get("decision"):
+        made.append((_t(a["decidedAt"]), a["requestedBy"], a["decision"]["deciderRef"], "acceptance"))
+    made.sort(key=lambda m: m[0])
+    errs = []
+    for i, (t1, req1, dec1, _) in enumerate(made):
+        for t2, req2, dec2, where in made[i + 1:]:
+            if req2 == dec1 and dec2 == req1 and (t2 - t1).total_seconds() <= days * 86400:
+                errs.append(f"{where}: reciprocal decision within {days} days (6.6)")
     return errs
 
 

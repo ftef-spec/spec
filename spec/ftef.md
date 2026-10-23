@@ -258,6 +258,17 @@ can be verified, cannot be replayed and cannot be taken by the person who asked 
   eligible decider exists, the move MUST NOT happen.
 - A decision by the person who requested the move or the acceptance is void. Rules that need two people compare
   persons, not accounts.
+- The decider MUST hold standing and MUST be independent of the requester:
+  - standing: the decider holds a role the policy names for that purpose;
+  - unit: where the relying party records organisational units, a decider from the requester's own unit does not
+    count;
+  - reciprocity: two people who decided each other's requests within the policy's `reciprocityDays` (RECOMMENDED
+    default 30) do not count as each other's decider; the later decision is void. A window of 0 records reciprocity
+    as a signal only.
+- If no eligible decider exists, the relying party SHOULD say so before a request is made, and name how one can be
+  appointed.
+- These rules apply when a decision is evaluated, not only when it is made. A policy change that tightens them SHOULD
+  first list the decisions that would stop counting, before it is enforced.
 - Decision signatures MUST be separated by purpose from each other and from authentication signatures, so that a
   sign-in can never pass as a decision.
 - A change to the relying party's policy that widens (a higher ceiling or cap, a longer freshness or `maxDays`, a

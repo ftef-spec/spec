@@ -156,6 +156,11 @@
         },
         "decision": {
           "$ref": "#/$defs/decision"
+        },
+        "requestedByUnit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An opaque reference to the requester's organisational unit, where the relying party records units (6.6)."
         }
       }
     },
@@ -482,6 +487,11 @@
         },
         "decision": {
           "$ref": "#/$defs/decision"
+        },
+        "requestedByUnit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An opaque reference to the requester's organisational unit, where the relying party records units (6.6)."
         }
       },
       "dependentRequired": {
@@ -599,6 +609,11 @@
           "type": "string",
           "pattern": "^[A-Za-z0-9_-]{16,}$",
           "description": "The decider's signature, base64url, over the canonical decision without this field."
+        },
+        "deciderUnit": {
+          "type": "string",
+          "minLength": 1,
+          "description": "An opaque reference to the decider's organisational unit, where the relying party records units. A decider from the requester's own unit does not count (6.6)."
         }
       }
     }
