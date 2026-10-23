@@ -58,7 +58,8 @@
       "recordDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
       "nonce": "n-bbbbbbbbbbbbbbbbbbbb",
       "notAfter": "2026-10-14T10:00:00Z",
-      "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZS1ub3QtdmVyaWZpYWJsZQ"
+      "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZS1ub3QtdmVyaWZpYWJsZQ",
+      "deciderUnit": "rp:unit:0001"
     },
     "limits": [
       {
@@ -75,7 +76,8 @@
         "type": "reduced-lease",
         "value": 0.5
       }
-    ]
+    ],
+    "requestedByUnit": "rp:unit:0003"
   },
   "evaluation": {
     "at": "2026-10-14T12:00:00Z",

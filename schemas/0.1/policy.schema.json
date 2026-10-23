@@ -222,6 +222,12 @@
             "minLength": 1
           },
           "description": "Who decides a policy change that widens (6.6)."
+        },
+        "reciprocityDays": {
+          "type": "integer",
+          "minimum": 0,
+          "default": 30,
+          "description": "Window in days in which two people who decided each other's requests do not count as each other's decider (6.6). 0 records reciprocity as a signal only."
         }
       }
     }
