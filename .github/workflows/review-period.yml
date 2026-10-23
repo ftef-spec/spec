@@ -1,0 +1,45 @@
+name: review-period
+# Sets the commit status "review-period" on each open pull request: pending until its review period (CONTRIBUTING.md)
+# has passed, success after, failure without a kind label or (normative) without a record in decisions/.
+#
+# Security: pull_request_target runs with a token that can write statuses also for pull requests from forks, which a
+# pull_request run cannot. It is safe here because the job checks out the BASE branch only (the default for
+# pull_request_target; no ref to the head is ever given), runs only tools/review_period.py from that base, and reads
+# the pull request through the API as data. Nothing from the pull request is executed or checked out.
+on:
+  pull_request_target:
+    types: [opened, reopened, edited, labeled, unlabeled, synchronize]
+  schedule:
+    - cron: "17 * * * *"   # time passing flips pending to success, so every open pull request is re-checked hourly
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: review-period-${{ github.event.pull_request.number || 'all' }}
+  cancel-in-progress: true
+jobs:
+  status:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      statuses: write
+      pull-requests: read
+      issues: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Set the review-period status (stdlib only, no installs)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$PR" ]; then
+            python tools/review_period.py --repo "$REPO" --pr "$PR"
+          else
+            python tools/review_period.py --repo "$REPO" --all
+          fi
