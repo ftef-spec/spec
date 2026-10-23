@@ -233,6 +233,14 @@ When an acceptance lapses, the relying party MUST record `lapsedAt` and `lapseRe
     party. Any other party acts locally, and its signal is advisory input elsewhere.
 - A standing decision MAY act as the decider for restorations that follow registry status, up to `watch`. A standing decision is recorded in the policy with its author, date and scope. Moves above `watch` always need an individual decision.
 - The relying party MUST re-evaluate the band whenever evidence, state, status or situation level changes. It MUST also re-evaluate no later than the earliest time at which an input expires: an item's freshness, an acceptance's `until`, a trust mark's `exp`, or a status list's `ttl`.
+- A move or action the relying party schedules for later (a move down after a grace period, the removal of accounts
+  after an exit) MUST re-check, when it runs, that its reason still holds, and MUST NOT run when it does not. The
+  reason is a condition on the current record and policy (for example "the partner is still `withdrawn`"), not the
+  event that started the schedule.
+- An action that cannot be undone (a deletion, a disable the scheduler cannot reverse) SHOULD carry that condition
+  with it, so that every system that runs it checks the same condition.
+- A lapse or expiry takes effect at its due time, not when a job runs: a late run MUST NOT extend trust. The relying
+  party SHOULD bound how late a scheduled action may run.
 
 ### 6.5 Limits
 A limit restricts what a partner may do at the seam.
