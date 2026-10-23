@@ -21,6 +21,17 @@ jobs:
         run: python -m pip install --require-hashes -r tools/requirements.txt
       - name: Schemas, examples and invariants
         run: python tools/check.py
+      - name: Released schemas never change (section 7.4)
+        run: |
+          bad=0
+          for t in $(git tag -l 'v*'); do
+            v=$(echo "${t#v}" | cut -d. -f1,2)
+            if ! git diff --quiet "$t" HEAD -- "schemas/$v"; then
+              echo "::error::schemas/$v differs from release $t; a released version never changes, a fix goes into a new version (RELEASING.md)"
+              bad=1
+            fi
+          done
+          exit $bad
       - name: Brand files match their master
         run: python brand/build.py --check
       - name: REUSE licensing

@@ -1,6 +1,6 @@
 {
   "_invalid_because": "an acceptance may never lift a partner to the highest band",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhsupplierx.example"
   },

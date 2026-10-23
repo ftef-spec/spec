@@ -28,12 +28,12 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 with atheris.instrument_imports():
     import evaluate as ev
-from check import invariants_policy, invariants_record  # noqa: E402
+from check import VERSION, invariants_policy, invariants_record  # noqa: E402
 from jsonschema import Draft202012Validator, FormatChecker  # noqa: E402
 
 VALID = ROOT / "examples" / "valid"
-SCHEMA = json.loads((ROOT / "schemas" / "0.1" / "partner-record.schema.json").read_text(encoding="utf-8"))
-POLICY_SCHEMA = json.loads((ROOT / "schemas" / "0.1" / "policy.schema.json").read_text(encoding="utf-8"))
+SCHEMA = json.loads((ROOT / "schemas" / VERSION / "partner-record.schema.json").read_text(encoding="utf-8"))
+POLICY_SCHEMA = json.loads((ROOT / "schemas" / VERSION / "policy.schema.json").read_text(encoding="utf-8"))
 VALIDATOR = Draft202012Validator(SCHEMA, format_checker=FormatChecker())
 POLICY_VALIDATOR = Draft202012Validator(POLICY_SCHEMA, format_checker=FormatChecker())
 SEEDS = [json.loads(f.read_text(encoding="utf-8")) for f in sorted(VALID.glob("partner-*.json"))]

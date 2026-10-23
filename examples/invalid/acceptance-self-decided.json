@@ -1,6 +1,6 @@
 {
   "_invalid_because": "the person who asked for the acceptance decided it themselves",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhsupplierx.example",
     "name": "vdhSupplierX (fictional)"
