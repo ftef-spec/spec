@@ -309,8 +309,14 @@ Publishes partner status for relying parties. A conformant registry:
 
 ### 7.4.1 Record and policy versions
 Partner records, policies and the evidence sets of trust marks carry a monotonic `version`. A relying party MUST
-refuse a version lower than the highest it has seen for the same partner or policy. A record MAY carry `notAfter`;
-after it, the record counts as unreachable status (8.1) until a newer version arrives.
+refuse a version lower than the highest it has seen for the same partner or policy.
+- The relying party SHOULD keep the highest version seen outside the evaluator's own state as well (for example in the
+  system that stores its decisions), and use the higher of the two. Losing or resetting the evaluator's state (a
+  rebuild, a restored backup, a wiped cache) then cannot let an older, validly signed document apply again.
+- Once a relying party has seen a versioned document for a partner or policy, a document for it without a `version`
+  counts as lower than any version, and is refused.
+
+A record MAY carry `notAfter`; after it, the record counts as unreachable status (8.1) until a newer version arrives.
 
 ## 8 Profiles
 

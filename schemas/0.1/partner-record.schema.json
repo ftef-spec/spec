@@ -83,7 +83,7 @@
     "version": {
       "type": "integer",
       "minimum": 1,
-      "description": "Monotonic version of this record; a relying party refuses a version lower than the highest it has seen (7.4.1)."
+      "description": "Monotonic version of this record; a relying party refuses a version lower than the highest it has seen, and once it has seen a version, a record without one (7.4.1)."
     },
     "notAfter": {
       "type": "string",
