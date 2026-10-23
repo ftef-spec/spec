@@ -269,61 +269,121 @@ def main() -> int:
             ok = (not errs) if kind == "valid" else (bool(errs) and bool(expect) and any(expect in e for e in errs))
             print(f"{'ok  ' if ok else 'FAIL'} profile {kind} {f.name}" + ("" if ok else f": {errs}"))
             fail += 0 if ok else 1
+    fail += conformance(schemas)
     fail += evaluator_cases(policy)
     return 1 if fail else 0
 
 
 def evaluator_cases(policy: dict) -> int:
-    """Rules that no static example shows: status outage and acceptance lifetime (6.3, 8.1)."""
+    """Robustness of the reference evaluator on documents that fail their checks: it must fail closed, not crash.
+    Conformance is in conformance/*.json (section 7.5); these inputs are not valid documents, so they are not vectors."""
     att = json.loads((ROOT / "examples" / "valid" / "partner-attested.json").read_text(encoding="utf-8"))
     acc = json.loads((ROOT / "examples" / "valid" / "partner-accepted.json").read_text(encoding="utf-8"))
     at = "2026-10-14T12:00:00Z"
-    adv = json.loads(json.dumps(att))
-    adv["evidence"].append({"id": "ev-3", "class": "observed", "result": "adverse",
-                            "axes": {"source": "second-party", "timeBasis": "point-in-time", "binding": "signed", "scope": "full"},
-                            "issuer": {"id": "https://probe.vdhrelyingparty.example"}, "issuedAt": "2026-10-14T08:00:00Z",
-                            "covers": att["evidence"][0]["covers"]})
-    res = json.loads(json.dumps(adv))
-    res["evidence"][-1]["resolution"] = {"deciderRole": "security-officer", "deciderRef": "rp:person:0001", "purpose": "resolution",
-                                         "recordDigest": "sha256:" + "d" * 64, "nonce": "n-" + "d" * 20,
-                                         "notAfter": "2026-10-14T11:00:00Z", "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZQ"}
-    wd = json.loads(json.dumps(att))
-    wd["evidence"] = [e for e in wd["evidence"] if e["id"] != "ev-1"]
-    wd["withdrawnEvidence"] = ["ev-1"]
     no_period = copy.deepcopy(att)
     no_period["evidence"] = [e for e in no_period["evidence"] if e["axes"]["timeBasis"] == "period"]
     for e in no_period["evidence"]:
-        e.pop("coversUntil")                            # schema-valid in 0.1 (issue #15)
-    lower_z, leap = copy.deepcopy(att), copy.deepcopy(att)
-    lower_z["evidence"][0]["issuedAt"] = "2026-10-14T06:00:00z"
-    leap["evidence"][0]["issuedAt"] = "2026-10-14T05:59:60Z"
+        e.pop("coversUntil")                            # fails the schema (issue #15)
     unknown_level = copy.deepcopy(acc)
     unknown_level["acceptance"]["situationLevel"] = "a level the policy does not define"
     cases = [
-        ("status reachable: attested partner is high", evaluate(att, policy, at, "normal")["band"] == "high"),
-        ("status unreachable: band capped at none, state unchanged",
-         evaluate(att, policy, at, "normal", status_reachable=False)["band"] == "none" and att["state"] == "member"),
-        ("status returns: band recovers without a decision", evaluate(att, policy, at, "normal")["band"] == "high"),
-        ("acceptance pauses while status is unreachable",
-         evaluate(acc, policy, at, "normal", status_reachable=False)["accepted"] is False),
-        ("acceptance applies again when status returns", evaluate(acc, policy, at, "normal")["accepted"] is True),
-        ("a higher situation level lapses the acceptance", evaluate(acc, policy, at, "elevated")["accepted"] is False),
-        ("an acceptance never applies after its end", evaluate(acc, policy, "2027-01-13T00:00:00Z", "normal")["accepted"] is False),
-        ("attested evidence two days old is long stale", evaluate(att, policy, "2026-10-16T12:00:00Z", "normal")["band"] == "medium"),
-        ("an adverse item cancels supporting evidence about the same coverage", evaluate(adv, policy, at, "normal")["band"] == "none"),
-        ("a resolved adverse item no longer cancels", evaluate(res, policy, at, "normal")["band"] == "high"),
-        ("a withdrawn evidence id never counts", evaluate(wd, policy, at, "normal")["band"] == "medium"),
         ("period evidence without its period buys nothing", evaluate(no_period, policy, at, "normal")["band"] == "none"),
-        ("a lowercase z is UTC", evaluate(lower_z, policy, at, "normal")["band"] == "high"),
-        ("a leap second is a valid time", evaluate(leap, policy, at, "normal")["band"] == "high"),
         ("an acceptance for an unknown situation level does not apply",
          evaluate(unknown_level, policy, at, "normal")["accepted"] is False),
     ]
     bad = 0
     for name, ok in cases:
-        print(f"{'ok  ' if ok else 'FAIL'} rule    {name}")
+        print(f"{'ok  ' if ok else 'FAIL'} robust  {name}")
         bad += 0 if ok else 1
     return bad
+
+
+def _pointer(doc, path: str):
+    """RFC 6901: the parent container and the last reference token of a JSON Pointer."""
+    parts = [p.replace("~1", "/").replace("~0", "~") for p in path.split("/")[1:]]
+    for p in parts[:-1]:
+        doc = doc[int(p)] if isinstance(doc, list) else doc[p]
+    return doc, parts[-1]
+
+
+def apply_patch(doc, ops: list[dict]):
+    """The add, remove and replace operations of RFC 6902 JSON Patch, which conformance vectors use."""
+    doc = copy.deepcopy(doc)
+    for op in ops:
+        parent, key = _pointer(doc, op["path"])
+        if isinstance(parent, list):
+            i = len(parent) if key == "-" else int(key)
+            if op["op"] == "add":
+                parent.insert(i, op["value"])
+            elif op["op"] == "remove":
+                del parent[i]
+            else:
+                parent[i] = op["value"]
+        elif op["op"] == "remove":
+            del parent[key]
+        else:
+            if op["op"] == "replace" and key not in parent:
+                raise KeyError(f"replace of a missing member {op['path']}")
+            parent[key] = op["value"]
+    return doc
+
+
+def _doc(ref: dict):
+    raw = json.loads((ROOT / ref["base"]).read_text(encoding="utf-8"))
+    return apply_patch(_strip(raw), ref.get("patch", []))
+
+
+def conformance(schemas: dict) -> int:
+    """Section 7.5: run the published vectors. Every evaluation vector's documents must themselves be valid."""
+    vschema = json.loads((ROOT / "conformance" / "vector.schema.json").read_text(encoding="utf-8"))
+    Draft202012Validator.check_schema(vschema)
+    bad, rules = 0, {}
+    for name in ("evaluation", "validity"):
+        suite = json.loads((ROOT / "conformance" / f"{name}.json").read_text(encoding="utf-8"))
+        errs = [e.message for e in Draft202012Validator(vschema).iter_errors(suite)]
+        if errs:
+            print(f"FAIL conformance/{name}.json does not follow vector.schema.json: {errs[:3]}")
+            bad += 1
+            continue
+        ids = [v["id"] for v in suite["vectors"]]
+        if len(ids) != len(set(ids)):
+            print(f"FAIL conformance/{name}.json: a vector id is used twice")
+            bad += 1
+        for v in suite["vectors"]:
+            rules[v["rule"]] = rules.get(v["rule"], 0) + 1
+            try:
+                ok, why = _run_vector(name, v, schemas)
+            except (KeyError, IndexError, ValueError) as e:
+                ok, why = False, f"cannot run: {e!r}"
+            print(f"{'ok  ' if ok else 'FAIL'} vector  {v['id']}" + ("" if ok else f": {why}"))
+            bad += 0 if ok else 1
+    print("vectors per rule: " + ", ".join(f"{k} {rules[k]}" for k in sorted(rules)))
+    return bad
+
+
+def _run_vector(suite: str, v: dict, schemas: dict) -> tuple[bool, str]:
+    if suite == "validity":
+        doc = _doc(v["document"])
+        if v["kind"] == "trust-mark":
+            errs = check_trust_mark(doc, schemas)
+        else:
+            policy = _doc({"base": "examples/valid/policy-defaults.json"})
+            sv = Draft202012Validator(schemas[v["kind"]], format_checker=FormatChecker())
+            errs = [e.message for e in sv.iter_errors(doc)]
+            if not errs:
+                errs = invariants_policy(doc) if v["kind"] == "policy" else invariants_record(doc, policy)
+        valid = not errs
+        return valid == v["expect"]["valid"], f"valid is {valid}: {errs[:2]}"
+    record, policy = _doc(v["record"]), _doc(v["policy"])
+    for kind, doc in (("partner-record", record), ("policy", policy)):
+        sv = Draft202012Validator(schemas[kind], format_checker=FormatChecker())
+        errs = [e.message for e in sv.iter_errors(doc)]
+        errs = errs or (invariants_policy(doc) if kind == "policy" else invariants_record(doc, policy))
+        if errs:
+            return False, f"the vector's {kind} is not valid: {errs[:2]}"
+    got = evaluate(record, policy, v["at"], v["situationLevel"], v.get("statusReachable", True))
+    diff = {k: (got[k], want) for k, want in v["expect"].items() if got[k] != want}
+    return not diff, f"got/expected {diff}"
 
 
 if __name__ == "__main__":

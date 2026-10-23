@@ -20,7 +20,7 @@ Thank you for helping. This repository is a Community Specification Working Grou
 
 While there is one maintainer, the review periods are observed by the maintainer and are not enforced by branch rules (`MAINTAINERS.md`).
 
-- A normative change updates the specification, the schema, the examples and `tools/check.py` in the same pull request, and keeps `python tools/check.py` and `reuse lint` green.
+- A normative change updates the specification, the schema, the examples, the conformance vectors (`conformance/`) and `tools/check.py` in the same pull request, and keeps `python tools/check.py` and `reuse lint` green.
 - Examples use fictional parties only, on `.example` domains.
 - Never include real infrastructure, risk registers, attack paths or personal data (see section 10 of the specification).
 

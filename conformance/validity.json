@@ -1,0 +1,341 @@
+{
+  "ftef": "0.1",
+  "vectors": [
+    {
+      "id": "acceptance-high",
+      "rule": "6.3",
+      "kind": "partner-record",
+      "description": "an acceptance may never lift a partner to the highest band",
+      "document": {
+        "base": "examples/invalid/acceptance-high.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "acceptance-not-lapsed",
+      "rule": "6.3",
+      "kind": "partner-record",
+      "description": "any move down lapses an acceptance, which must then be recorded (6.3)",
+      "document": {
+        "base": "examples/invalid/acceptance-not-lapsed.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "acceptance-self-decided",
+      "rule": "6.6",
+      "kind": "partner-record",
+      "description": "the person who asked for the acceptance decided it themselves",
+      "document": {
+        "base": "examples/invalid/acceptance-self-decided.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "acceptance-unknown-level",
+      "rule": "6.3",
+      "kind": "partner-record",
+      "description": "the situation level of an acceptance must be a level of the policy (6.3)",
+      "document": {
+        "base": "examples/invalid/acceptance-unknown-level.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "acceptance-wrong-decider-role",
+      "rule": "6.6",
+      "kind": "partner-record",
+      "description": "the acceptance was decided by a role the policy does not name for acceptances",
+      "document": {
+        "base": "examples/invalid/acceptance-wrong-decider-role.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "admission-without-decider",
+      "rule": "6.4",
+      "kind": "partner-record",
+      "description": "admission from joining to member is a move up and needs a decider (5.6, 6.4)",
+      "document": {
+        "base": "examples/invalid/admission-without-decider.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "admission-without-decision",
+      "rule": "6.6",
+      "kind": "partner-record",
+      "description": "admission names a decider but carries no signed decision",
+      "document": {
+        "base": "examples/invalid/admission-without-decision.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "decision-applied-after-notafter",
+      "rule": "6.6",
+      "kind": "partner-record",
+      "description": "the decision was applied after it expired",
+      "document": {
+        "base": "examples/invalid/decision-applied-after-notafter.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "evidence-reuses-withdrawn-id",
+      "rule": "5.2",
+      "kind": "partner-record",
+      "description": "an evidence id that was withdrawn is used again",
+      "document": {
+        "base": "examples/invalid/evidence-reuses-withdrawn-id.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "evidence-without-covers",
+      "rule": "5.2",
+      "kind": "partner-record",
+      "description": "evidence must say what it covers (5.2)",
+      "document": {
+        "base": "examples/invalid/evidence-without-covers.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "lease-factor-text",
+      "rule": "6.5",
+      "kind": "partner-record",
+      "description": "a reduced-lease factor is a number between 0 and 1 (6.5)",
+      "document": {
+        "base": "examples/invalid/lease-factor-text.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "partner-run-verifier",
+      "rule": "5.3",
+      "kind": "partner-record",
+      "description": "a verifier controlled by the partner is first-party, so it cannot carry the attested class (5.3)",
+      "document": {
+        "base": "examples/invalid/partner-run-verifier.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "period-in-future",
+      "rule": "6.2",
+      "kind": "partner-record",
+      "description": "a period may not end after the evidence was issued; otherwise it would buy freshness (6.2)",
+      "document": {
+        "base": "examples/invalid/period-in-future.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "period-without-end",
+      "rule": "6.2",
+      "kind": "partner-record",
+      "description": "evidence covering a period must state the period, so freshness can run from its end",
+      "document": {
+        "base": "examples/invalid/period-without-end.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "policy-restricted-without-limits",
+      "rule": "6.5",
+      "kind": "policy",
+      "description": "restricted needs its own limits (5.6, 6.5)",
+      "document": {
+        "base": "examples/invalid/policy-restricted-without-limits.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "policy-self-declared-high",
+      "rule": "5.3",
+      "kind": "policy",
+      "description": "a policy may lower a class ceiling, never raise it (5.3)",
+      "document": {
+        "base": "examples/invalid/policy-self-declared-high.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "policy-severe-lengthens",
+      "rule": "6.2",
+      "kind": "policy",
+      "description": "a higher situation level must never lengthen freshness (6.2)",
+      "document": {
+        "base": "examples/invalid/policy-severe-lengthens.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "policy-state-without-deciders",
+      "rule": "6.6",
+      "kind": "policy",
+      "description": "a state names no decider role for its move up",
+      "document": {
+        "base": "examples/invalid/policy-state-without-deciders.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "policy-upto-down",
+      "rule": "5.6",
+      "kind": "policy",
+      "description": "a state can only move up to a more trusted state (5.6)",
+      "document": {
+        "base": "examples/invalid/policy-upto-down.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "stale-evidence-overclaimed",
+      "rule": "6.2",
+      "kind": "partner-record",
+      "description": "an attestation from 2025 is long stale and counts as none (6.1); the recorded evaluation overclaims",
+      "document": {
+        "base": "examples/invalid/stale-evidence-overclaimed.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "upward-without-decider",
+      "rule": "6.4",
+      "kind": "partner-record",
+      "description": "a move up the ladder must name a decider (checked by tools/check.py, not expressible in the schema)",
+      "document": {
+        "base": "examples/invalid/upward-without-decider.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "8.1-band-in-mark",
+      "rule": "8.1",
+      "kind": "trust-mark",
+      "description": "must not carry a band",
+      "document": {
+        "base": "examples/profile-8.1/invalid/band-in-mark.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "8.1-partner-verifier",
+      "rule": "8.1",
+      "kind": "trust-mark",
+      "description": "controlled by the partner is first-party",
+      "document": {
+        "base": "examples/profile-8.1/invalid/partner-verifier.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "8.1-self-issued",
+      "rule": "8.1",
+      "kind": "trust-mark",
+      "description": "must not issue FTEF trust marks about itself",
+      "document": {
+        "base": "examples/profile-8.1/invalid/self-issued.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "8.1-summary-with-scope",
+      "rule": "8.1",
+      "kind": "trust-mark",
+      "description": "Additional properties are not allowed",
+      "document": {
+        "base": "examples/profile-8.1/invalid/summary-with-scope.json"
+      },
+      "expect": {
+        "valid": false
+      }
+    },
+    {
+      "id": "valid-partner-accepted",
+      "rule": "5",
+      "kind": "partner-record",
+      "description": "a valid example",
+      "document": {
+        "base": "examples/valid/partner-accepted.json"
+      },
+      "expect": {
+        "valid": true
+      }
+    },
+    {
+      "id": "valid-partner-attested",
+      "rule": "5",
+      "kind": "partner-record",
+      "description": "a valid example",
+      "document": {
+        "base": "examples/valid/partner-attested.json"
+      },
+      "expect": {
+        "valid": true
+      }
+    },
+    {
+      "id": "valid-policy-defaults",
+      "rule": "5",
+      "kind": "policy",
+      "description": "a valid example",
+      "document": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "expect": {
+        "valid": true
+      }
+    }
+  ]
+}

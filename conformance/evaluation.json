@@ -1,0 +1,724 @@
+{
+  "ftef": "0.1",
+  "vectors": [
+    {
+      "id": "6.1-best-item",
+      "rule": "6.1",
+      "description": "the band is the best counted item: attested on hardware-rooted binding gives high",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high",
+        "evidencedBand": "high",
+        "accepted": false,
+        "limits": []
+      }
+    },
+    {
+      "id": "6.1-partial-scope",
+      "rule": "6.1",
+      "description": "partial scope lowers an item by one band",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "replace",
+            "path": "/evidence/0/axes/scope",
+            "value": "partial"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "medium"
+      }
+    },
+    {
+      "id": "6.1-future-dated",
+      "rule": "6.1",
+      "description": "an item dated after the evaluation time counts as none",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "replace",
+            "path": "/evidence/0/issuedAt",
+            "value": "2026-10-14T13:00:00Z"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "none"
+      }
+    },
+    {
+      "id": "6.1-state-cap",
+      "rule": "6.1",
+      "description": "the partner's state caps the band: restricted caps at low and carries its limits",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/stateHistory/-",
+            "value": {
+              "state": "restricted",
+              "since": "2026-10-14T10:00:00Z",
+              "trigger": "confirmed security incident at the partner"
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/state",
+            "value": "restricted"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "low",
+        "evidencedBand": "low",
+        "limits": [
+          {
+            "type": "no-transit"
+          },
+          {
+            "type": "no-automatic-actions"
+          },
+          {
+            "type": "reduced-lease",
+            "value": 0.5
+          }
+        ]
+      }
+    },
+    {
+      "id": "6.1-adverse-cancels",
+      "rule": "6.1",
+      "description": "an unresolved adverse item cancels supporting evidence about the same coverage",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/evidence/-",
+            "value": {
+              "id": "ev-3",
+              "class": "observed",
+              "result": "adverse",
+              "axes": {
+                "source": "second-party",
+                "timeBasis": "point-in-time",
+                "binding": "signed",
+                "scope": "full"
+              },
+              "issuer": {
+                "id": "https://probe.vdhrelyingparty.example"
+              },
+              "issuedAt": "2026-10-14T08:00:00Z",
+              "covers": "the partner service exposed at the federation seam (fictional)"
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "none"
+      }
+    },
+    {
+      "id": "6.1-adverse-resolved",
+      "rule": "6.1",
+      "description": "a resolved adverse item no longer cancels",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/evidence/-",
+            "value": {
+              "id": "ev-3",
+              "class": "observed",
+              "result": "adverse",
+              "axes": {
+                "source": "second-party",
+                "timeBasis": "point-in-time",
+                "binding": "signed",
+                "scope": "full"
+              },
+              "issuer": {
+                "id": "https://probe.vdhrelyingparty.example"
+              },
+              "issuedAt": "2026-10-14T08:00:00Z",
+              "covers": "the partner service exposed at the federation seam (fictional)",
+              "resolution": {
+                "deciderRole": "security-officer",
+                "deciderRef": "rp:person:0001",
+                "purpose": "resolution",
+                "recordDigest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+                "nonce": "n-dddddddddddddddddddd",
+                "notAfter": "2026-10-14T11:00:00Z",
+                "signature": "ZmljdGlvbmFsLXNpZ25hdHVyZQ"
+              }
+            }
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high"
+      }
+    },
+    {
+      "id": "6.1-withdrawn-never-counts",
+      "rule": "6.1",
+      "description": "a withdrawn evidence id never counts",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/0"
+          },
+          {
+            "op": "add",
+            "path": "/withdrawnEvidence",
+            "value": [
+              "ev-1"
+            ]
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "medium"
+      }
+    },
+    {
+      "id": "6.1-time-lowercase-z",
+      "rule": "6.1",
+      "description": "a lowercase z is UTC",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/evidence/0/issuedAt",
+            "value": "2026-10-14T06:00:00z"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high"
+      }
+    },
+    {
+      "id": "6.1-time-leap-second",
+      "rule": "6.1",
+      "description": "a leap second (:60) is a valid time",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "replace",
+            "path": "/evidence/0/issuedAt",
+            "value": "2026-10-14T05:59:60Z"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high"
+      }
+    },
+    {
+      "id": "6.2-fresh",
+      "rule": "6.2",
+      "description": "an attested item 6 hours old is fresh",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high"
+      }
+    },
+    {
+      "id": "6.2-stale",
+      "rule": "6.2",
+      "description": "past its freshness an item is one band lower",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-15T07:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "medium"
+      }
+    },
+    {
+      "id": "6.2-long-stale",
+      "rule": "6.2",
+      "description": "past twice its freshness an item counts as missing",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-16T07:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "none"
+      }
+    },
+    {
+      "id": "6.2-level-shortens",
+      "rule": "6.2",
+      "description": "a raised situation level shortens freshness: elevated halves it",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T19:00:00Z",
+      "situationLevel": "elevated",
+      "expect": {
+        "band": "medium"
+      }
+    },
+    {
+      "id": "6.2-level-restores",
+      "rule": "6.2",
+      "description": "at the normal level the same item at the same time is fresh",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T19:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high"
+      }
+    },
+    {
+      "id": "6.2-period-age",
+      "rule": "6.2",
+      "description": "period evidence ages from coversUntil: one year and a day later it is stale",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/0"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2027-03-01T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "low"
+      }
+    },
+    {
+      "id": "6.2-two-days",
+      "rule": "6.2",
+      "description": "attested evidence two days old is long stale; the period item still gives medium",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-16T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "medium"
+      }
+    },
+    {
+      "id": "6.3-accepted",
+      "rule": "6.3",
+      "description": "a valid acceptance lifts the band to its own band and adds its limits",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "medium",
+        "evidencedBand": "low",
+        "accepted": true,
+        "limits": [
+          {
+            "type": "data-ceiling",
+            "value": "internal"
+          },
+          {
+            "type": "no-transit"
+          },
+          {
+            "type": "no-automatic-actions"
+          },
+          {
+            "type": "reduced-lease",
+            "value": 0.5
+          }
+        ]
+      }
+    },
+    {
+      "id": "6.3-before-decided",
+      "rule": "6.3",
+      "description": "an acceptance does not apply before it was decided",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T08:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "low",
+        "accepted": false,
+        "limits": []
+      }
+    },
+    {
+      "id": "6.3-after-end",
+      "rule": "6.3",
+      "description": "an acceptance never applies after its end",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2027-01-13T00:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "accepted": false
+      }
+    },
+    {
+      "id": "6.3-higher-level",
+      "rule": "6.3",
+      "description": "a situation level above the acceptance's lapses it",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "elevated",
+      "expect": {
+        "band": "low",
+        "accepted": false
+      }
+    },
+    {
+      "id": "6.3-move-down",
+      "rule": "6.3",
+      "description": "a move down after the acceptance was decided lapses it (lapsedAt recorded)",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "add",
+            "path": "/stateHistory/-",
+            "value": {
+              "state": "watch",
+              "since": "2026-10-14T10:00:00Z",
+              "trigger": "confirmed security incident at the partner"
+            }
+          },
+          {
+            "op": "replace",
+            "path": "/state",
+            "value": "watch"
+          },
+          {
+            "op": "add",
+            "path": "/acceptance/lapsedAt",
+            "value": "2026-10-14T10:00:00Z"
+          },
+          {
+            "op": "add",
+            "path": "/acceptance/lapseReason",
+            "value": "downgrade"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "low",
+        "accepted": false
+      }
+    },
+    {
+      "id": "8.1-status-unreachable",
+      "rule": "8.1",
+      "description": "while status is unreachable the band is capped at none",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "statusReachable": false,
+      "expect": {
+        "band": "none"
+      }
+    },
+    {
+      "id": "8.1-acceptance-pauses",
+      "rule": "8.1",
+      "description": "an acceptance pauses while status is unreachable",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "statusReachable": false,
+      "expect": {
+        "band": "none",
+        "accepted": false
+      }
+    },
+    {
+      "id": "8.1-status-returns",
+      "rule": "8.1",
+      "description": "when status returns the acceptance applies again without a decision",
+      "record": {
+        "base": "examples/valid/partner-accepted.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T12:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "accepted": true
+      }
+    }
+  ]
+}
