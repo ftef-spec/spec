@@ -7,7 +7,7 @@ authors:
   - name: "FTEF contributors"
 repository-code: "https://github.com/ftef-spec/spec"
 url: "https://ftef.vdhome.be/"
-license: LicenseRef-CSL-1.0
+license: Community-Spec-1.0
 keywords:
   - federation
   - trust
