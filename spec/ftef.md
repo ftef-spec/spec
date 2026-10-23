@@ -201,6 +201,9 @@ no band (`none`). In 0.1, independent items do not combine into a higher band.
 ### 6.2 Freshness
 An item is fresh while its age is at most the class freshness, multiplied by the freshness scales of the partner's state and of the current situation level.
 - Age runs from `coversUntil` for `period` evidence, and from `issuedAt` otherwise.
+- Age is measured between instants. A source that states only a date (an audit report, a certificate) MUST be
+  recorded at the start of that date in UTC (`T00:00:00Z`) in `issuedAt`, `coversFrom` and `coversUntil`, so that
+  every relying party computes the same age, and the item is never fresher than any time on that date would make it.
 - For `period` evidence, `coversFrom` MUST NOT be after `coversUntil`, and `coversUntil` MUST NOT be after `issuedAt`. Otherwise the item counts as `none`, so that a period reaching into the future cannot buy freshness.
 - A freshness of 0 means the item counts only at the moment of access.
 - A higher situation level MUST NOT lengthen freshness. A lower one restores it at once.
@@ -270,7 +273,7 @@ An implementation claims one or more conformance classes. A claim names the FTEF
 Issues evidence items or partner records. A conformant producer:
 1. MUST emit documents that validate against the 0.1 schemas;
 2. MUST state the axes of every evidence item truthfully. In particular, it MUST NOT claim `third-party` for an assessor acting on behalf of, and controlled by, the partner (5.3);
-3. MUST state the period covered for `period` evidence, and the receipt for `signed-transparent` evidence. It MUST NOT claim `verifier` for a verifier it operates or controls (5.3);
+3. MUST state the period covered for `period` evidence, and the receipt for `signed-transparent` evidence. It MUST record a source that states only a date at the start of that date in UTC (6.2). It MUST NOT claim `verifier` for a verifier it operates or controls (5.3);
 4. MUST NOT include risk registers, internal policy texts or attack paths in evidence it shares (principle 2).
 
 ### 7.2 Relying party

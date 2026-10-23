@@ -496,6 +496,68 @@
       }
     },
     {
+      "id": "6.2-date-only-fresh",
+      "rule": "6.2",
+      "description": "a source dated 2026-10-13, recorded at midnight UTC, is fresh until exactly one day later",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "replace",
+            "path": "/evidence/0/issuedAt",
+            "value": "2026-10-13T00:00:00Z"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T00:00:00Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "high"
+      }
+    },
+    {
+      "id": "6.2-date-only-stale",
+      "rule": "6.2",
+      "description": "the same source is stale one second later, for every relying party",
+      "record": {
+        "base": "examples/valid/partner-attested.json",
+        "patch": [
+          {
+            "op": "remove",
+            "path": "/evidence/1"
+          },
+          {
+            "op": "replace",
+            "path": "/evidence/0/issuedAt",
+            "value": "2026-10-13T00:00:00Z"
+          },
+          {
+            "op": "remove",
+            "path": "/evaluation"
+          }
+        ]
+      },
+      "policy": {
+        "base": "examples/valid/policy-defaults.json"
+      },
+      "at": "2026-10-14T00:00:01Z",
+      "situationLevel": "normal",
+      "expect": {
+        "band": "medium"
+      }
+    },
+    {
       "id": "6.3-accepted",
       "rule": "6.3",
       "description": "a valid acceptance lifts the band to its own band and adds its limits",
