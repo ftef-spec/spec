@@ -83,7 +83,7 @@ NOTE: FTEF is not related to "TEF" (Threat Event Frequency) in Open FAIR.
 7. **Common mode counts.** Partners that share a dependency with the relying party do not count as independent.
 
 ## 5 Data model
-The normative schemas are `schemas/0.1/partner-record.schema.json` and `schemas/0.1/policy.schema.json` (JSON Schema
+The normative schemas are `schemas/0.2/partner-record.schema.json` and `schemas/0.2/policy.schema.json` (JSON Schema
 draft 2020-12). Where this text and a schema disagree, this text applies.
 
 ### 5.1 Partner record
@@ -268,7 +268,7 @@ An implementation claims one or more conformance classes. A claim names the FTEF
 
 ### 7.1 Producer
 Issues evidence items or partner records. A conformant producer:
-1. MUST emit documents that validate against the 0.1 schemas;
+1. MUST emit documents that validate against the schemas of the FTEF version it claims;
 2. MUST state the axes of every evidence item truthfully. In particular, it MUST NOT claim `third-party` for an assessor acting on behalf of, and controlled by, the partner (5.3);
 3. MUST state the period covered for `period` evidence, and the receipt for `signed-transparent` evidence. It MUST NOT claim `verifier` for a verifier it operates or controls (5.3);
 4. MUST NOT include risk registers, internal policy texts or attack paths in evidence it shares (principle 2).

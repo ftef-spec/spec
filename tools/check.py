@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from evaluate import LADDER, _t, evaluate  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
+VERSION = "0.2"                                     # the version under development (RELEASING.md)
 BANDS = ["none", "low", "medium", "high"]
 
 # 5.3: the highest ceiling each class may have; a policy may set a lower one, never a higher one
@@ -231,7 +232,7 @@ def check_trust_mark(tm: dict, schemas: dict) -> list[str]:
 
 
 def main() -> int:
-    schemas = {n: json.loads((ROOT / "schemas" / "0.1" / f"{n}.schema.json").read_text(encoding="utf-8"))
+    schemas = {n: json.loads((ROOT / "schemas" / VERSION / f"{n}.schema.json").read_text(encoding="utf-8"))
                for n in ("partner-record", "policy")}
     for s in schemas.values():
         Draft202012Validator.check_schema(s)

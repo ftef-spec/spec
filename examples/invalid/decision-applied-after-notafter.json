@@ -1,6 +1,6 @@
 {
   "_invalid_because": "the decision was applied after it expired",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhpartnerlab.example",
     "name": "vdhPartnerLab (fictional)"

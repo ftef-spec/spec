@@ -1,6 +1,6 @@
 {
   "_invalid_because": "evidence covering a period must state the period, so freshness can run from its end",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhpartnerlab.example"
   },

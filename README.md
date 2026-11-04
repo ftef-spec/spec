@@ -20,7 +20,7 @@
 [![REUSE](https://img.shields.io/badge/REUSE-compliant-brightgreen)](https://reuse.software/)
 
 [Specification](spec/ftef.md) ·
-[Schemas](schemas/0.1/) ·
+[Schemas](schemas/0.2/) ·
 [Examples](examples/) ·
 [Decisions](decisions/) ·
 [Roadmap](#status-and-roadmap) ·
@@ -142,7 +142,8 @@ The reference evaluator is informative: where it and the specification disagree,
 | Path | What | Normative |
 |---|---|:---:|
 | [`spec/ftef.md`](spec/ftef.md) | the specification; text with the key words of BCP 14 (RFC 2119, RFC 8174) | yes |
-| [`schemas/0.1/`](schemas/0.1/) | JSON Schema 2020-12 for the partner record and the policy, served at `https://ftef.vdhome.be/schema/0.1/` from release tags | yes |
+| [`schemas/0.2/`](schemas/0.2/) | JSON Schema 2020-12 for the partner record and the policy of the version under development (0.2, pre-draft) | yes |
+| [`schemas/0.1/`](schemas/0.1/) | the 0.1 schemas exactly as released in `v0.1.0`, served at `https://ftef.vdhome.be/schema/0.1/`; never changed | yes |
 | [`examples/`](examples/) | valid and invalid records and policies, profile 8.1 trust marks; fictional parties only | no |
 | [`decisions/`](decisions/) | decision records: why the specification says what it says | no |
 | [`tools/check.py`](tools/check.py) | validates schemas, examples and invariants; runs the evaluator rules | no |

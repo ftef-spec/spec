@@ -1,6 +1,6 @@
 {
   "_invalid_because": "a state names no decider role for its move up",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "classes": {
     "self-declared": {
       "ceiling": "low",

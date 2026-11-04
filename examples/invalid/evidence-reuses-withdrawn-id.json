@@ -1,6 +1,6 @@
 {
   "_invalid_because": "an evidence id that was withdrawn is used again",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhpartnerlab.example",
     "name": "vdhPartnerLab (fictional)"

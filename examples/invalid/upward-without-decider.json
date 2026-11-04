@@ -1,6 +1,6 @@
 {
   "_invalid_because": "a move up the ladder must name a decider (checked by tools/check.py, not expressible in the schema)",
-  "ftef": "0.1",
+  "ftef": "0.2",
   "partner": {
     "id": "https://federation.vdhpartnerlab.example"
   },
