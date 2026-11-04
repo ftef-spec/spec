@@ -25,7 +25,9 @@
 - Reference evaluator: `counted()` filters withdrawn ids, adverse items and contradicted coverage before 6.1.
 - Checker: three evaluator cases (adverse cancels, resolution restores, withdrawn never counts) and one invalid
   example (a reused withdrawn id).
-- "Same coverage" is compared by the `covers` value. Partial overlap needs the corroboration work of 0.2.
+- "Same coverage" is compared by the `covers` value after normalisation (NFKC, default-ignorable code points removed,
+  case folded), and two coverages overlap unless the relying party has recorded them as distinct (errata to 0.1,
+  decision 0015). Structured coverage identifiers and partial overlap need the corroboration work of 0.2.
 
 ## Open questions
 - Is "lowest wins on contradiction" compatible with "best item wins" for coverage that only partly overlaps, or should
