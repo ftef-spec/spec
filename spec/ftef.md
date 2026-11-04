@@ -108,6 +108,10 @@ Evidence ids are unique within a partner record and MUST NOT be reused. A withdr
 
 An item MAY state `result` `adverse`: it shows a required outcome failing for what it covers.
 
+`covers` values are compared after Unicode NFKC normalisation, removal of default-ignorable code points, case folding,
+and trimming and collapsing white space. Two items cover the same thing unless the relying party has recorded that
+their coverage is disjoint; equal normalised values are never disjoint (decision 0004).
+
 Evidence whose time basis is `period` MUST state the period covered (`coversFrom`, `coversUntil`). Evidence bound as `signed-transparent` MUST carry its transparency receipt.
 
 The `scope` axis is the relying party's judgement of how far `covers` reaches across its own seam. A producer cannot know another party's seam, so the relying party MUST set `scope` itself and MUST NOT take it from the producer. Evidence shared by producers and registries carries `covers` and no `scope`.
@@ -166,11 +170,14 @@ The states, from most to least trusted, are `member`, `watch`, `restricted`, `su
 - `withdrawn` can only move up to `joining`: re-admission starts again.
 - `exited` is final.
 - A relying party's policy gives `member`, `watch`, `restricted`, `suspended` and `withdrawn` each a cap on the band and a freshness scale. `joining` and `exited` have no band (6.1).
+- At evaluation, a relying party applies to a state no higher cap and no longer freshness scale than to any state above it, and the cap `none` to `suspended` and `withdrawn`, whatever its policy states.
 - The policy gives `restricted` its own list of limits, which apply whatever the band (6.5).
 - The policy names, for each state except `member` and `exited`, the higher state it moves up to (`upTo`) and the condition for it. It also names the triggers that move a partner down (6.4).
 
 ### 5.7 Status and history
-Every state change is recorded with its time, its trigger and, for a move up, its decider and its decision (6.6). Status is published through a profile (8.1).
+Every state change is recorded with its time, its trigger and, for a move up, its decider and its decision (6.6).
+History only grows forwards: an entry dated before an earlier entry is refused, and a record whose history is out of
+order has no band. Status is published through a profile (8.1).
 
 ## 6 Evaluation
 The numeric values are the relying party's policy (`policy.schema.json`). Annex C gives RECOMMENDED defaults. The invariants in this section are normative whatever the values.
@@ -183,16 +190,23 @@ Before an item counts, the relying party MUST verify its binding:
 
 An item whose binding cannot be verified is treated as `unsigned`. An item whose class the relying party's policy does not list counts as `none`.
 
+The relying party then checks the item's axes, with the binding as verified, against the required axes of its class
+(5.3). An item that does not meet them counts no higher than its claimed class and no higher than the named class with
+the highest ceiling whose axes it meets, with the shorter freshness of the two, or as `none` if it meets none. An
+extension class counts only where the relying party knows the axes its profile defines and the item meets them.
+
 Then, for each item:
 1. Take the policy's ceiling for its class.
 2. If its scope is `partial`, lower it by one band. If its scope is `none`, the item counts as `none`.
 3. If the result is `high` and the verified binding is not `hardware-rooted`, lower it to `medium`.
 4. If the item is stale (6.2), lower it by one band. If its age exceeds twice its freshness, or it is dated in the future, the item counts as `none`.
 
-Contradiction resolves towards less trust. An adverse item that is still in play (not older than twice its
-freshness, not dated in the future) and has no `resolution` cancels every item that covers the same thing: those items
-count as `none` until a decider resolves the contradiction (6.6, purpose `resolution`). An adverse item never raises
-the band. Items about different coverage are not in contradiction.
+Contradiction resolves towards less trust. An adverse item of a listed class is in play until twice its class
+freshness, unscaled, has passed since the latest date it states (`issuedAt`, `coversUntil`); the scales of 6.2 do not
+shorten it, and defects in its axes or dates, or a date in the future, do not take it out of play. An adverse item in
+play without a resolution that holds (6.6) cancels every item that covers the same thing (5.2): those items count as
+`none` until a decider resolves the contradiction. An adverse item never raises the band. An adverse item whose binding
+cannot be verified still cancels; the relying party reviews it and resolves it if it is unfounded.
 
 The evidenced band is the highest result over all items, capped by the cap of the partner's state. The partner's band
 is therefore never better than the weakest of its state and its best evidence. A partner in `joining` or `exited` has
@@ -200,18 +214,23 @@ no band (`none`). In 0.1, independent items do not combine into a higher band.
 
 ### 6.2 Freshness
 An item is fresh while its age is at most the class freshness, multiplied by the freshness scales of the partner's state and of the current situation level.
-- Age runs from `coversUntil` for `period` evidence, and from `issuedAt` otherwise.
+- Age runs from `coversUntil` whenever the item states it, and from `issuedAt` otherwise. A `coversUntil` after
+  `issuedAt` makes the item count as `none`.
 - For `period` evidence, `coversFrom` MUST NOT be after `coversUntil`, and `coversUntil` MUST NOT be after `issuedAt`. Otherwise the item counts as `none`, so that a period reaching into the future cannot buy freshness.
 - A freshness of 0 means the item counts only at the moment of access.
 - A higher situation level MUST NOT lengthen freshness. A lower one restores it at once.
+- The scales apply to supporting items only (6.1).
 
 ### 6.3 Risk acceptance
 - An acceptance MUST NOT run longer than the policy's `acceptance.maxDays`, measured from `decidedAt` to `until`.
-- It requires at least one evidence item in the partner record.
+- It requires at least one supporting evidence item, still in the record, that counted at least `low` (6.1) at
+  `decidedAt`, under the situation level recorded in it and the partner's state at that moment (a partner being
+  admitted counts as `member`).
 - A relying party MUST NOT grant a new acceptance for the same partner within `maxDays` after the previous one ended, unless the partner has presented an evidence item issued after the previous acceptance was decided. Without this, acceptances could be chained indefinitely.
 
 An acceptance lifts the band to the least of: its granted band, the policy's `acceptance.maxBand`, and the cap of the partner's state. It does so only while all of the following hold:
-- the current time lies between `decidedAt` and `until`;
+- the current time lies between `decidedAt` and `until`, and `until` is no more than `maxDays` after `decidedAt`;
+- its decision holds (6.6) and its qualifying evidence item exists;
 - it has not lapsed;
 - the partner's status is reachable (8.1).
 
@@ -220,7 +239,7 @@ An acceptance **lapses**:
 - when the situation level rises above the one recorded in it;
 - on any move down of the partner, including into `watch` or `restricted`.
 
-When an acceptance lapses, the relying party MUST record `lapsedAt` and `lapseReason`. A lapsed acceptance MUST NOT apply again; a new decision is needed. An acceptance pauses without lapsing only while status is unreachable, and applies again when status returns. The situation level recorded in an acceptance MUST be one of the levels in the relying party's policy. While an acceptance lifts the band, its limits apply.
+When an acceptance lapses, the relying party MUST record `lapsedAt` and `lapseReason`. A lapsed acceptance MUST NOT apply again; a new decision is needed. An acceptance pauses without lapsing only while status is unreachable, and applies again when status returns. The situation level recorded in an acceptance MUST be one of the levels in the relying party's policy. While an acceptance is active, its limits apply, whether or not it lifts the band.
 
 ### 6.4 State transitions
 - A move down MUST take effect without human approval when one of its triggers occurs. The policy names the triggers. At a minimum, a registry status lower than the local state (8.1) and a confirmed security incident at the partner are triggers.
@@ -231,7 +250,7 @@ When an acceptance lapses, the relying party MUST record `lapsedAt` and `lapseRe
   - if two recognised registries publish different states for one partner, the lower applies;
   - only the issuer of an evidence item, or the registry that issued a trust mark, withdraws it for every relying
     party. Any other party acts locally, and its signal is advisory input elsewhere.
-- A standing decision MAY act as the decider for restorations that follow registry status, up to `watch`. A standing decision is recorded in the policy with its author, date and scope. Moves above `watch` always need an individual decision.
+- A standing decision MAY act as the decider for restorations that follow registry status, up to `watch`. A standing decision is recorded in the policy with its author, date and scope. It never restores a suspension caused by a status value outside the table of 8.1. Moves above `watch` always need an individual decision.
 - The relying party MUST re-evaluate the band whenever evidence, state, status or situation level changes. It MUST also re-evaluate no later than the earliest time at which an input expires: an item's freshness, an acceptance's `until`, a trust mark's `exp`, or a status list's `ttl`.
 
 ### 6.5 Limits
@@ -239,25 +258,38 @@ A limit restricts what a partner may do at the seam.
 - `data-ceiling`: the highest data classification it may receive. The value is a label from the relying party's own classification scheme. FTEF does not define labels.
 - `no-transit`: it may not pass trust on to others.
 - `no-automatic-actions`: its events may not trigger automatic actions.
-- `reduced-lease`: its leases are multiplied by the given factor, a number greater than 0 and less than 1.
+- `reduced-lease`: its leases are multiplied by the given factor, a number greater than 0 and less than 1. A lease is
+  the longest time for which the relying party lets something it granted to the partner at the seam (a session, a
+  token, a credential, a cached authorisation or a delegation) be used without checking again. The factor shortens
+  every such time; it does not change the freshness of evidence (6.2).
 - `release-on-attestation`: data or keys are released only on attestation at the moment of access.
 
-The limits of an active acceptance apply while it lifts the band. The policy's `restricted` limits apply to a partner in `restricted`, whatever its band.
+The limits of an active acceptance apply while it is active, whether or not it lifts the band. The policy's `restricted` limits apply to a partner in `restricted`, whatever its band.
+
+When several limits of one type apply, the strictest wins: the smallest `reduced-lease` factor, and every
+`data-ceiling` at once. A limit never relaxes another.
 
 ### 6.6 Decisions
-A name proves nothing. Every move up, admission and risk acceptance carries a decision as a signed object, so that it
-can be verified, cannot be replayed and cannot be taken by the person who asked for it.
-- A decision MUST state the decider's role, an opaque reference to the decider, its purpose (`admission`, `move-up` or
-  `acceptance`), the digest of the canonical form (RFC 8785) of the record as decided, a nonce, `notAfter`, and the
+A name proves nothing. Every move up, admission, risk acceptance and resolution carries a decision as a signed object,
+so that it can be verified, cannot be replayed and cannot be taken by the person who asked for it.
+- A decision MUST state the decider's role, an opaque reference to the decider, its purpose (`admission`, `move-up`,
+  `acceptance` or `resolution`), the digest of the canonical form (RFC 8785) of the record as decided, a nonce, `notAfter`, and the
   decider's signature over the canonical decision.
 - A relying party MUST verify the signature before the decision takes effect. A decision whose signature does not
   verify counts as absent.
-- A decision applies only while the record's digest equals `recordDigest` and the current time is before `notAfter`.
-  If the record changed after signing, the decision MUST be given again.
-- The policy MUST name the decider roles for admission, for risk acceptances and for each state's move up. If no
-  eligible decider exists, the move MUST NOT happen.
+- `notAfter` is the time by which the relying party must apply the decision. The relying party records, from its own
+  clock, when it applied it; the decision takes effect only if that time is strictly before `notAfter`, and never on a
+  time taken from the decision or from a producer. A resolution is applied no earlier than the adverse item's
+  `issuedAt`. What was decided then lasts as its own rules say (a state until the next change, an acceptance until
+  `until` or its lapse, a resolution while the adverse item is unchanged).
+- A decision applies only while the record's digest equals `recordDigest`. If the record changed after signing, the
+  decision MUST be given again.
+- A relying party keeps the nonce of every decision it applied after verifying its signature, per decider key, until
+  `notAfter` plus its clock skew, and MUST NOT apply a decision whose nonce it holds.
+- The policy MUST name the decider roles for admission, for risk acceptances and for each state's move up. In 0.1 the
+  roles for admission also decide resolutions. If no eligible decider exists, the move MUST NOT happen.
 - A decision by the person who requested the move or the acceptance is void. Rules that need two people compare
-  persons, not accounts.
+  persons, not accounts, and compare references after the normalisation of 5.2 without white-space collapsing.
 - Decision signatures MUST be separated by purpose from each other and from authentication signatures, so that a
   sign-in can never pass as a decision.
 - A change to the relying party's policy that widens (a higher ceiling or cap, a longer freshness or `maxDays`, a
@@ -313,7 +345,9 @@ A registry issues, per partner, an OpenID Federation 1.0 Trust Mark (`typ` `trus
 
   A relying party builds the evidence of its partner record from the summaries and adds its own `scope`.
 
-A trust mark is a snapshot. Its `exp` does not extend the freshness of the evidence in it. For evidence with a short freshness, such as `attested`, the registry SHOULD reissue the trust mark within that freshness, or relying parties SHOULD obtain fresh evidence through `reference`.
+A trust mark is a snapshot. Its `exp` does not extend the freshness of the evidence in it. Once `exp` has passed, the
+supporting evidence it carried counts as `none` until a new trust mark carries it; adverse evidence it carried keeps
+cancelling (6.1). For evidence with a short freshness, such as `attested`, the registry SHOULD reissue the trust mark within that freshness, or relying parties SHOULD obtain fresh evidence through `reference`.
 
 The trust mark carries evidence and state, never a band. Each relying party computes its own band under its own policy (6.1).
 
@@ -331,6 +365,9 @@ The partner state is carried in the Status List Token (`typ` `statuslist+jwt`, `
 
 Rules for status:
 - A registry MUST include `ttl` in its Status List Token. A relying party MUST fetch the status list again within its `ttl`.
+- A Status List Token counts as fetched only if its signature verifies, it has not expired, and its `iat` is not later
+  than the relying party's clock plus its clock skew.
+- A status value outside the table above counts as `suspended`.
 - If it cannot, it MUST treat the trust mark's evidence as stale (6.1).
 - If it still cannot after twice the `ttl`, the status is unreachable: the relying party MUST cap the partner's band at `none` until status is fetched again.
 

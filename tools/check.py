@@ -21,7 +21,8 @@ from urllib.parse import urlparse
 from jsonschema import Draft202012Validator, FormatChecker
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from evaluate import LADDER, _t, evaluate  # noqa: E402
+import evaluate as E  # noqa: E402
+from evaluate import CLASS_AXES, LADDER, _t, evaluate, person  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 VERSION = "0.2"                                     # the version under development (RELEASING.md)
@@ -30,15 +31,7 @@ BANDS = ["none", "low", "medium", "high"]
 # 5.3: the highest ceiling each class may have; a policy may set a lower one, never a higher one
 CLASS_MAX = {"self-declared": "low", "self-measured": "medium", "observed": "low",
              "assessed-by-relying-party": "medium", "independently-assessed": "medium", "attested": "high"}
-# 5.3: the axes each named class requires
-CLASS_AXES = {
-    "self-declared": {"source": {"first-party"}},
-    "self-measured": {"source": {"first-party"}, "timeBasis": {"continuous"}, "binding": {"signed", "signed-transparent", "hardware-rooted"}},
-    "observed": {"source": {"second-party"}},
-    "assessed-by-relying-party": {"source": {"second-party"}},
-    "independently-assessed": {"source": {"third-party"}, "assessor": {"accredited", "mutually-recognised"}},
-    "attested": {"source": {"verifier"}, "binding": {"hardware-rooted"}, "timeBasis": {"continuous", "at-access"}},
-}
+# 5.3: the axes each named class requires: CLASS_AXES, shared with the evaluator
 
 
 def _strip(o):
@@ -81,7 +74,8 @@ def check_evidence_item(e: dict, partner_host: str, where: str) -> list[str]:
 
 
 def check_decision(holder: dict, roles: list[str], purpose: str, applied_at: str, where: str) -> list[str]:
-    """6.6: a decision is a signed object by a role the policy names, never by its requester, applied before notAfter.
+    """6.6: a decision is a signed object by a role the policy names, never by its requester (persons compared
+    normalised), applied strictly before notAfter.
     The checker cannot verify signatures of fictional examples; it checks their shape and the separation rules."""
     d = holder.get("decision")
     if not d:
@@ -91,9 +85,9 @@ def check_decision(holder: dict, roles: list[str], purpose: str, applied_at: str
         errs.append(f"{where}: decision purpose {d['purpose']} is not {purpose} (6.6)")
     if d["deciderRole"] not in roles:
         errs.append(f"{where}: {d['deciderRole']} is not a decider role the policy names for {purpose} (6.6)")
-    if holder.get("requestedBy") and holder["requestedBy"] == d["deciderRef"]:
+    if holder.get("requestedBy") and person(holder["requestedBy"]) == person(d["deciderRef"]):
         errs.append(f"{where}: decided by the person who requested it (6.6)")
-    if applied_at and _t(applied_at) > _t(d["notAfter"]):
+    if applied_at and _t(applied_at) >= _t(d["notAfter"]):
         errs.append(f"{where}: decision applied after its notAfter (6.6)")
     return errs
 
@@ -134,7 +128,11 @@ def invariants_record(r: dict, policy: dict) -> list[str]:
             errs.append(f"evidence {e['id']}: only an adverse item has a resolution (6.1)")
         if e.get("resolution"):
             errs += check_decision({"decision": e["resolution"]}, policy["deciders"]["admission"], "resolution",
-                                   e["resolution"]["notAfter"], f"evidence {e['id']} resolution")
+                                   e["issuedAt"], f"evidence {e['id']} resolution")
+    nonces = [d["nonce"] for d in [h.get("decision") for h in hist] + [e.get("resolution") for e in r["evidence"]]
+              + [(r.get("acceptance") or {}).get("decision")] if d]
+    if len(nonces) != len(set(nonces)):
+        errs.append("a decision nonce is used twice: a replayed decision (6.6)")
     if len(ids) != len(set(ids)):
         errs.append("an evidence id is used twice (5.2)")
     a = r.get("acceptance")
@@ -312,7 +310,8 @@ def evaluator_cases(policy: dict) -> int:
         ("an acceptance never applies after its end", evaluate(acc, policy, "2027-01-13T00:00:00Z", "normal")["accepted"] is False),
         ("attested evidence two days old is long stale", evaluate(att, policy, "2026-10-16T12:00:00Z", "normal")["band"] == "medium"),
         ("an adverse item cancels supporting evidence about the same coverage", evaluate(adv, policy, at, "normal")["band"] == "none"),
-        ("a resolved adverse item no longer cancels", evaluate(res, policy, at, "normal")["band"] == "high"),
+        ("a resolved adverse item no longer cancels",
+         evaluate(res, policy, at, "normal", applied={"n-" + "d" * 20: "2026-10-14T10:00:00Z"})["band"] == "high"),
         ("a withdrawn evidence id never counts", evaluate(wd, policy, at, "normal")["band"] == "medium"),
         ("period evidence without its period buys nothing", evaluate(no_period, policy, at, "normal")["band"] == "none"),
         ("a lowercase z is UTC", evaluate(lower_z, policy, at, "normal")["band"] == "high"),
@@ -320,11 +319,19 @@ def evaluator_cases(policy: dict) -> int:
         ("an acceptance for an unknown situation level does not apply",
          evaluate(unknown_level, policy, at, "normal")["accepted"] is False),
     ]
+    cases += errata_cases(policy, att, acc)
     bad = 0
     for name, ok in cases:
         print(f"{'ok  ' if ok else 'FAIL'} rule    {name}")
         bad += 0 if ok else 1
     return bad
+
+
+
+def errata_cases(policy: dict, att: dict, acc: dict) -> list:
+    """0.1 errata: rules the text states, or states ambiguously, that the evaluator now enforces."""
+    from errata_vectors import cases
+    return cases(policy, att, acc)
 
 
 if __name__ == "__main__":
